@@ -2585,35 +2585,47 @@
       '</div>' +
 
       '<div class="exec-section-card">' +
-        '<div class="exec-section-card__title">Выдать PRO по VK ID</div>' +
-        '<p class="exec-field-hint" style="margin-bottom:12px;">Выберите тариф, введите VK ID человека и нажмите «Выдать PRO». Тариф на вашем устройстве не изменится.</p>' +
-        '<div class="form-group" style="margin-bottom:10px;">' +
-          '<label class="exec-field-label">Тариф для выдачи</label>' +
-          '<div class="exec-select-wrap">' +
-            '<select class="exec-select" data-owner-input="vip-plan">' +
-              '<option value="lifetime" selected>PRO Навсегда (VIP · Разовый)</option>' +
-              '<option value="year">PRO на 1 год (890 ₽)</option>' +
-              '<option value="month">PRO на 1 месяц (99 ₽)</option>' +
-            '</select>' +
-            '<span class="exec-select-arrow" aria-hidden="true">' +
-              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>' +
-            '</span>' +
-          '</div>' +
+        '<div class="exec-section-card__title">1. Выберите тариф для выдачи</div>' +
+        '<p class="exec-field-hint" style="margin-bottom:10px;">Нажмите на тариф, который хотите выдать пользователю. Ваш личный тариф не изменится.</p>' +
+        '<div class="exec-grant-grid" data-owner-grant-grid>' +
+          '<button type="button" class="exec-grant-tile" data-grant-plan="month">' +
+            '<div class="exec-grant-tile__top">' +
+              '<span class="exec-grant-tile__dot"></span>' +
+            '</div>' +
+            '<div class="exec-grant-tile__name">PRO на 1 месяц</div>' +
+            '<div class="exec-grant-tile__price">99 ₽ / мес</div>' +
+          '</button>' +
+          '<button type="button" class="exec-grant-tile" data-grant-plan="year">' +
+            '<div class="exec-grant-tile__top">' +
+              '<span class="exec-grant-tile__dot"></span>' +
+              '<span class="exec-tier-tile__tag">-25%</span>' +
+            '</div>' +
+            '<div class="exec-grant-tile__name">PRO на 1 год</div>' +
+            '<div class="exec-grant-tile__price">890 ₽ / год</div>' +
+          '</button>' +
+          '<button type="button" class="exec-grant-tile exec-grant-tile--active" data-grant-plan="lifetime">' +
+            '<div class="exec-grant-tile__top">' +
+              '<span class="exec-grant-tile__dot"></span>' +
+              '<span class="exec-tier-tile__tag">VIP</span>' +
+            '</div>' +
+            '<div class="exec-grant-tile__name">PRO Навсегда</div>' +
+            '<div class="exec-grant-tile__price">1 490 ₽ разово</div>' +
+          '</button>' +
         '</div>' +
         '<div class="form-group" style="margin-bottom:12px;">' +
-          '<label class="exec-field-label">VK ID пользователя</label>' +
+          '<label class="exec-field-label">2. Введите VK ID пользователя</label>' +
           '<div class="exec-vip-form">' +
             '<input type="text" inputmode="numeric" class="exec-vip-input" data-owner-input="vkid" placeholder="Например: 12345678">' +
-            '<button type="button" class="exec-vip-add-btn" data-owner-action="add-vip">+ Выдать PRO</button>' +
+            '<button type="button" class="exec-vip-add-btn" data-owner-action="add-vip">+ Выдать PRO Навсегда</button>' +
           '</div>' +
         '</div>' +
         '<label class="exec-field-label" style="margin-bottom:6px;">Активные VIP-пользователи (' + vipEntries.length + ')</label>' +
         '<div class="owner-vip-list" data-owner-vip-list>' + vipListHtml + '</div>' +
       '</div>' +
 
-      '<div class="exec-section-card">' +
-        '<div class="exec-section-card__title">Тестирование тарифов на этом устройстве</div>' +
-        '<p class="exec-field-hint" style="margin-bottom:10px;">Переключает тариф только на вашем экране — удобно для проверки Free-версии и дизайна с разными планами.</p>' +
+      '<div class="exec-section-card" style="opacity:0.9;">' +
+        '<div class="exec-section-card__title">🔧 Тестирование на этом устройстве</div>' +
+        '<p class="exec-field-hint" style="margin-bottom:10px;">Переключает тариф ТОЛЬКО на вашем экране для проверки отображения Free или других планов.</p>' +
         '<div class="exec-tier-grid">' +
           tierModes.map(function (m) {
             var isAct = currentModeKey === m.key;
@@ -2719,13 +2731,33 @@
         });
       });
 
+      var selectedGrantPlan = 'lifetime';
+      var grantTiles = card.querySelectorAll('[data-grant-plan]');
       var addVipBtn = card.querySelector('[data-owner-action="add-vip"]');
       var vkInput = card.querySelector('[data-owner-input="vkid"]');
-      var vipPlanSelect = card.querySelector('[data-owner-input="vip-plan"]');
+
+      var planLabels = {
+        month: 'на 1 месяц',
+        year: 'на 1 год',
+        lifetime: 'Навсегда'
+      };
+
+      Array.prototype.forEach.call(grantTiles, function (tile) {
+        tile.addEventListener('click', function () {
+          selectedGrantPlan = tile.getAttribute('data-grant-plan') || 'lifetime';
+          Array.prototype.forEach.call(grantTiles, function (t) {
+            t.classList.remove('exec-grant-tile--active');
+          });
+          tile.classList.add('exec-grant-tile--active');
+          if (addVipBtn) {
+            addVipBtn.textContent = '+ Выдать PRO ' + (planLabels[selectedGrantPlan] || 'Навсегда');
+          }
+        });
+      });
+
       if (addVipBtn && vkInput) {
         addVipBtn.addEventListener('click', function () {
-          var targetPlan = vipPlanSelect ? vipPlanSelect.value : 'lifetime';
-          var res = pm.addVipVkId(vkInput.value, targetPlan);
+          var res = pm.addVipVkId(vkInput.value, selectedGrantPlan);
           statusEl.textContent = res.message;
           statusEl.className = 'backup-status backup-status--' + (res.ok ? 'ok' : 'error');
           if (res.ok) {

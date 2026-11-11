@@ -56,7 +56,7 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="css/styles.css?v=15">
+  <link rel="stylesheet" href="css/styles.css?v=16">
 
   <!--
     Этап 10: VK Bridge SDK.
@@ -123,30 +123,37 @@
     </button>
   </nav>
 
-  <script src="js/db.js"></script>
-  <script src="js/lazy-loader.js"></script>
-  <script src="js/vk-integration.js"></script>
-  <script src="js/cloud-sync.js"></script>
-  <script src="js/security.js"></script>
-  <script src="js/pdf-exporter.js"></script>
-  <script src="js/pro-manager.js"></script>
-  <script src="js/notifications-prefs.js"></script>
-  <script src="js/calendar-export.js"></script>
-  <script src="js/push-manager.js"></script>
-  <script src="js/quick-actions.js"></script>
-  <script src="js/family-ui.js"></script>
-  <script src="js/family.js"></script>
-  <script src="js/personalization.js"></script>
-  <script src="js/gost-qr.js"></script>
-  <script src="js/pro-analytics-plus.js"></script>
-  <script src="js/micro-fx.js"></script>
-  <script src="js/value-pack.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/payments.js"></script>
-  <script src="js/meters.js"></script>
-  <script src="js/documents.js"></script>
-  <script src="js/tasks.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/backup.js"></script>
+  <script src="js/db.js?v=16"></script>
+  <script src="js/lazy-loader.js?v=16"></script>
+  <script src="js/vk-integration.js?v=16"></script>
+  <script src="js/cloud-sync.js?v=16"></script>
+  <script src="js/security.js?v=16"></script>
+  <script src="js/pdf-exporter.js?v=16"></script>
+  <script src="js/pro-manager.js?v=16"></script>
+  <script src="js/notifications-prefs.js?v=16"></script>
+  <script src="js/calendar-export.js?v=16"></script>
+  <script src="js/push-manager.js?v=16"></script>
+  <script src="js/quick-actions.js?v=16"></script>
+  <script src="js/family-ui.js?v=16"></script>
+  <script src="js/family.js?v=16"></script>
+  <script src="js/personalization.js?v=16"></script>
+  <script src="js/gost-qr.js?v=16"></script>
+  <script src="js/pro-analytics-plus.js?v=16"></script>
+  <script src="js/micro-fx.js?v=16"></script>
+  <script src="js/value-pack.js?v=16"></script>
+  <script src="js/app.js?v=16"></script>
+  <script src="js/payments.js?v=16"></script>
+  <script src="js/meters.js?v=16"></script>
+  <script src="js/documents.js?v=16"></script>
+  <script src="js/tasks.js?v=16"></script>
+  <script src="js/stats.js?v=16"></script>
+  <script src="js/backup.js?v=16"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        registrations.forEach(function (r) { r.update(); });
+      });
+    }
+  </script>
 </body>
 </html>

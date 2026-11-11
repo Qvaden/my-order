@@ -142,27 +142,27 @@ async function runAudit() {
   });
   await adminPage.waitForTimeout(400);
 
-  // Verify modal is open and has dropdown
+  // Verify modal is open and has grant plan tiles
   const modalInfo = await adminPage.evaluate(() => {
     const modal = document.querySelector('.modal-card');
-    const select = modal ? modal.querySelector('[data-owner-input="vip-plan"]') : null;
+    const tiles = modal ? modal.querySelectorAll('[data-grant-plan]') : [];
     const input = modal ? modal.querySelector('[data-owner-input="vkid"]') : null;
     const btn = modal ? modal.querySelector('[data-owner-action="add-vip"]') : null;
     return {
       hasModal: Boolean(modal),
-      hasPlanSelect: Boolean(select),
+      grantTilesCount: tiles.length,
       hasVkidInput: Boolean(input),
       hasAddBtn: Boolean(btn)
     };
   });
   console.log('  Owner Modal Elements:', JSON.stringify(modalInfo));
 
-  // Grant 1 year to user 999888777
+  // Select 1 year grant tile and grant to user 999888777
   await adminPage.evaluate(() => {
-    const select = document.querySelector('[data-owner-input="vip-plan"]');
+    const yearTile = document.querySelector('[data-grant-plan="year"]');
+    if (yearTile) yearTile.click();
     const input = document.querySelector('[data-owner-input="vkid"]');
     const btn = document.querySelector('[data-owner-action="add-vip"]');
-    if (select) select.value = 'year';
     if (input) input.value = '999888777';
     if (btn) btn.click();
   });

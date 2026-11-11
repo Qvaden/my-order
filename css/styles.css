@@ -5659,6 +5659,82 @@ button.btn--icon:active {
   line-height: 1.25;
 }
 
+.exec-grant-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .exec-grant-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.exec-grant-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.exec-grant-tile:hover {
+  border-color: var(--color-primary);
+}
+
+.exec-grant-tile--active {
+  border-color: var(--color-primary) !important;
+  background: var(--tint-primary) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.14);
+}
+
+.exec-grant-tile__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 3px;
+}
+
+.exec-grant-tile__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #94A3B8;
+  background: transparent;
+  transition: all 0.15s ease;
+}
+
+.exec-grant-tile--active .exec-grant-tile__dot {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.exec-grant-tile__name {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.exec-grant-tile__price {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+
 .exec-vip-form {
   display: flex;
   gap: 8px;
