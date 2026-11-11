@@ -7045,12 +7045,16 @@ button.btn--icon:active {
   z-index: 1200 !important;
   display: flex !important;
   flex-direction: column !important;
-  background: rgba(15, 23, 42, 0.78) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  background: rgba(241, 245, 249, 0.94) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   padding: var(--space-4, 16px) !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
+}
+
+[data-theme="dark"] .print-host {
+  background: rgba(15, 23, 42, 0.88) !important;
 }
 
 .print-host__bar {
@@ -7065,26 +7069,47 @@ button.btn--icon:active {
   gap: var(--space-3, 12px);
   padding: 12px 16px;
   border-radius: var(--radius-lg, 12px);
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  z-index: 1201;
+}
+
+[data-theme="dark"] .print-host__bar {
   background: #1E293B !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  z-index: 1201;
 }
 
 .print-host__hint {
   flex: 1 1 auto;
   font-size: var(--fs-xs, 12px);
-  color: #94A3B8 !important;
+  color: #64748B !important;
   line-height: 1.4;
 }
 
+[data-theme="dark"] .print-host__hint {
+  color: #94A3B8 !important;
+}
+
 .print-host__bar .btn--secondary {
+  background: #F1F5F9 !important;
+  color: #1E293B !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+.print-host__bar .btn--secondary:hover {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+[data-theme="dark"] .print-host__bar .btn--secondary {
   background: rgba(255, 255, 255, 0.1) !important;
   color: #F1F5F9 !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
 }
 
-.print-host__bar .btn--secondary:hover {
+[data-theme="dark"] .print-host__bar .btn--secondary:hover {
   background: rgba(255, 255, 255, 0.18) !important;
   color: #FFFFFF !important;
 }
@@ -7102,9 +7127,13 @@ button.btn--icon:active {
   background: #FFFFFF !important;
   color: #0F172A !important;
   border-radius: var(--radius-lg, 12px);
-  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.35);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
   padding: 14mm 12mm;
   box-sizing: border-box;
+}
+
+[data-theme="dark"] .print-host__paper {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
 }
 
 /* Документ на белой бумаге ВСЕГДА отображается тёмным текстом (в обеих темах приложения) */
