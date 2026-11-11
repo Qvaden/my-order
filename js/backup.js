@@ -1402,27 +1402,151 @@
     if (level) node.classList.add('backup-status--' + level);
   }
 
+  /** Текущая активная вкладка настроек */
+  var activeSettingsTab = (function () {
+    try {
+      var saved = localStorage.getItem('myorder_settings_tab');
+      if (saved && ['appearance', 'notifications', 'storage', 'pro'].indexOf(saved) !== -1) {
+        return saved;
+      }
+    } catch (e) {}
+    return 'storage';
+  })();
+
   /**
-   * Рендер раздела #backup.
+   * VIP-шапка профиля пользователя в настройках
+   */
+  function settingsProfileCardHtml() {
+    var vkUser = window.VK && window.VK.user && window.VK.user();
+    var name = (vkUser && vkUser.first_name) ? (vkUser.first_name + (vkUser.last_name ? ' ' + vkUser.last_name : '')) : 'Мой Порядок';
+    var photo = (vkUser && (vkUser.photo_100 || vkUser.photo_200)) || '';
+    var isP = isPro();
+    var pm = window.ProManager;
+    var isOwn = pm && pm.isOwner && pm.isOwner();
+    var activePlan = (pm && pm.getActivePlan) ? pm.getActivePlan() : { title: 'PRO' };
+
+    var tierLabel = isP
+      ? (isOwn ? 'Владелец · PRO Навсегда' : (activePlan.title + ' · VIP'))
+      : 'Бесплатный тариф';
+
+    var btnLabel = isOwn ? 'Панель' : (isP ? 'Подписка' : 'Купить PRO');
+    var btnAction = isOwn ? 'owner-panel' : (isP ? 'manage-subscription' : 'buy-pro');
+
+    var avatarHtml = photo
+      ? '<img src="' + esc(photo) + '" alt="' + esc(name) + '">'
+      : '<span class="settings-profile-card__crown">' + (isP ? '👑' : '⭐') + '</span>';
+
+    return '<div class="settings-profile-card">' +
+      '<div class="settings-profile-card__left">' +
+        '<div class="settings-profile-card__avatar">' + avatarHtml + '</div>' +
+        '<div class="settings-profile-card__meta">' +
+          '<div class="settings-profile-card__title">' + esc(name) + '</div>' +
+          '<div class="settings-profile-card__tier' + (isP ? '' : ' is-free') + '">' +
+            '<span class="settings-profile-card__dot"></span>' +
+            '<span>' + esc(tierLabel) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="settings-profile-card__btn" data-backup-action="' + btnAction + '">' +
+        esc(btnLabel) +
+      '</button>' +
+    '</div>';
+  }
+
+  /**
+   * Сегментированный переключатель вкладок в стиле iOS Glass Capsule
+   */
+  function settingsNavCapsuleHtml() {
+    var tabs = [
+      { id: 'appearance', label: 'Вид', icon: '🎨' },
+      { id: 'notifications', label: 'Напоминания', icon: '🔔' },
+      { id: 'storage', label: 'Данные', icon: '💾' },
+      { id: 'pro', label: 'PRO', icon: '👑' }
+    ];
+
+    return '<div class="settings-nav-capsule" role="tablist" aria-label="Разделы настроек">' +
+      tabs.map(function (tab) {
+        var isAct = activeSettingsTab === tab.id;
+        return '<button type="button" class="settings-capsule-btn' + (isAct ? ' settings-capsule-btn--active' : '') + '"' +
+          ' data-settings-tab="' + tab.id + '" role="tab" aria-selected="' + (isAct ? 'true' : 'false') + '">' +
+          '<span class="settings-capsule-icon">' + tab.icon + '</span>' +
+          '<span class="settings-capsule-text">' + tab.label + '</span>' +
+        '</button>';
+      }).join('') +
+    '</div>';
+  }
+
+  /**
+   * Переключает активную вкладку настроек
+   * @param {'appearance'|'notifications'|'storage'|'pro'} tabId
+   */
+  function switchSettingsTab(tabId) {
+    if (['appearance', 'notifications', 'storage', 'pro'].indexOf(tabId) === -1) return;
+    activeSettingsTab = tabId;
+    try { localStorage.setItem('myorder_settings_tab', tabId); } catch (e) {}
+
+    var el = getAppEl();
+    if (!el) return;
+
+    var tabBtns = el.querySelectorAll('[data-settings-tab]');
+    Array.prototype.forEach.call(tabBtns, function (btn) {
+      var act = btn.getAttribute('data-settings-tab') === tabId;
+      btn.classList.toggle('settings-capsule-btn--active', act);
+      btn.setAttribute('aria-selected', act ? 'true' : 'false');
+    });
+
+    var panels = el.querySelectorAll('[data-settings-panel]');
+    Array.prototype.forEach.call(panels, function (pan) {
+      var act = pan.getAttribute('data-settings-panel') === tabId;
+      pan.classList.toggle('settings-tab-panel--active', act);
+    });
+  }
+
+  /**
+   * Рендер раздела #backup с разделением по вкладкам.
    */
   function render() {
     var el = getAppEl();
     if (!el) return;
 
-    el.innerHTML = '<header class="page-header">Настройки и данные</header>' +
-      securityNoticeHtml() +
-      exportSectionHtml() +
-      importSectionHtml() +
-      cloudSectionHtml() +
-      pinSectionHtml() +
-      familySectionHtml() +
-      (window.ValuePack && window.ValuePack.renderSavingsGoalHtml ? window.ValuePack.renderSavingsGoalHtml() : '') +
-      personalizationSectionHtml() +
-      customCategoriesSectionHtml() +
-      reportSectionHtml() +
-      notificationsSectionHtml() +
-      subscriptionSectionHtml() +
-      dangerSectionHtml();
+    el.innerHTML = '<header class="page-header">Настройки</header>' +
+      settingsProfileCardHtml() +
+      settingsNavCapsuleHtml() +
+      '<div class="settings-tab-panels">' +
+        // Вкладка 1: Вид (Оформление и интерфейс)
+        '<div class="settings-tab-panel' + (activeSettingsTab === 'appearance' ? ' settings-tab-panel--active' : '') + '" data-settings-panel="appearance">' +
+          personalizationSectionHtml() +
+          customCategoriesSectionHtml() +
+        '</div>' +
+        // Вкладка 2: Напоминания (Push и календарь)
+        '<div class="settings-tab-panel' + (activeSettingsTab === 'notifications' ? ' settings-tab-panel--active' : '') + '" data-settings-panel="notifications">' +
+          notificationsSectionHtml() +
+        '</div>' +
+        // Вкладка 3: Данные (Облако, Экспорт, Импорт, PDF, Очистка)
+        '<div class="settings-tab-panel' + (activeSettingsTab === 'storage' ? ' settings-tab-panel--active' : '') + '" data-settings-panel="storage">' +
+          securityNoticeHtml() +
+          cloudSectionHtml() +
+          exportSectionHtml() +
+          importSectionHtml() +
+          reportSectionHtml() +
+          dangerSectionHtml() +
+        '</div>' +
+        // Вкладка 4: PRO (Подписка, PIN, Семья, Копилка)
+        '<div class="settings-tab-panel' + (activeSettingsTab === 'pro' ? ' settings-tab-panel--active' : '') + '" data-settings-panel="pro">' +
+          subscriptionSectionHtml() +
+          pinSectionHtml() +
+          familySectionHtml() +
+          (window.ValuePack && window.ValuePack.renderSavingsGoalHtml ? window.ValuePack.renderSavingsGoalHtml() : '') +
+        '</div>' +
+      '</div>';
+
+    /* ---------- Переключение вкладок ---------- */
+    var tabBtns = el.querySelectorAll('[data-settings-tab]');
+    Array.prototype.forEach.call(tabBtns, function (b) {
+      b.addEventListener('click', function () {
+        switchSettingsTab(b.getAttribute('data-settings-tab'));
+      });
+    });
 
     /* ---------- Кнопка экспорта ---------- */
     var expBtn = el.querySelector('[data-backup-action="export"]');
@@ -2923,6 +3047,8 @@
       console.info('[Backup] Модуль загружен. API: window.Backup');
     },
     render: render,
+    switchTab: switchSettingsTab,
+    activeTab: function () { return activeSettingsTab; },
     exportData: exportData,
     downloadDump: downloadDump,
     importData: analyzeFile, // public alias
