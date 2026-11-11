@@ -860,12 +860,6 @@
     return '<div class="card backup-section backup-subscription" style="animation-delay:0.3s">' +
         '<div class="pro-sub-header">' +
           '<h3 class="backup-section__title" style="margin:0;">Подписка</h3>' +
-          (isOwnerUser
-            ? '<button type="button" class="pro-owner-trigger" data-backup-action="owner-panel">' +
-                crownSvg +
-                '<span>Владелец</span>' +
-              '</button>'
-            : '') +
         '</div>' +
         '<div class="backup-sub__status backup-sub__status--' + (pro ? 'active' : 'free') + '">' +
           '<span>' + (pro ? ('PRO активен · ' + esc(activePlan.title) + (isOwnerGrant ? ' (VIP)' : '')) : 'Бесплатный тариф') + '</span>' +
