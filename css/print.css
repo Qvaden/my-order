@@ -51,16 +51,25 @@
   flex: 0 0 auto;
   width: min(210mm, 100%);
   margin: 0 auto var(--space-6, 24px);
-  background: #FFFFFF;
+  background: #FFFFFF !important;
   border-radius: var(--radius-lg, 12px);
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.35);
   padding: 14mm 12mm;
-  color: #000000;
+  color: #0F172A !important;
+}
+
+.print-host__paper,
+.print-host__paper *:not(.badge) {
+  color: #0F172A !important;
 }
 
 /* Показываем предпросмотр только пока открыт слой печати */
 body.printing-mode {
-  overflow: hidden;
+  overflow: hidden !important;
+}
+
+body.printing-mode .nav-bottom {
+  display: none !important;
 }
 
 /* -----------------------------------------------------------

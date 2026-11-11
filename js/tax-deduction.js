@@ -35,61 +35,65 @@
       var rowsHtml = paidYear.map(function (p, idx) {
         var rub = ((p.amount || 0) / 100).toLocaleString('ru-RU', { minimumFractionDigits: 2 });
         return '<tr>' +
-          '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:center;">' + (idx + 1) + '</td>' +
-          '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">' + (p.date || '—') + '</td>' +
-          '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;"><strong>' + (p.title || 'Платёж') + '</strong></td>' +
-          '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">' + (p.category || 'ЖКУ') + '</td>' +
-          '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:bold;">' + rub + ' ₽</td>' +
+          '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;color:#1e293b;">' + (idx + 1) + '</td>' +
+          '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#1e293b;">' + (p.date || '—') + '</td>' +
+          '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#0f172a;"><strong>' + (p.title || 'Платёж') + '</strong></td>' +
+          '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#334155;">' + (p.category || 'ЖКУ') + '</td>' +
+          '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:#0f172a;">' + rub + ' ₽</td>' +
         '</tr>';
       }).join('');
 
-      var html = '<!DOCTYPE html>' +
+      var contentHtml =
+        '<div class="header" style="border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:24px;">' +
+          '<h1 class="title" style="font-size:22px;font-weight:800;text-transform:uppercase;margin:0 0 8px 0;color:#0f172a;letter-spacing:0.02em;">Справка-реестр расходов на оплату жилья и ЖКУ</h1>' +
+          '<div class="meta" style="font-size:13px;color:#64748b;">Отчётный период: 01.01.' + targetYear + ' — 31.12.' + targetYear + ' · Сформировано в сервисе «Мой Порядок»</div>' +
+        '</div>' +
+        '<table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:13px;background:transparent;">' +
+          '<thead>' +
+            '<tr>' +
+              '<th style="width:40px;text-align:center;background:#f8fafc;padding:10px 12px;border-bottom:2px solid #cbd5e1;color:#0f172a;font-weight:700;">№</th>' +
+              '<th style="width:110px;background:#f8fafc;padding:10px 12px;border-bottom:2px solid #cbd5e1;color:#0f172a;font-weight:700;">Дата</th>' +
+              '<th style="background:#f8fafc;padding:10px 12px;border-bottom:2px solid #cbd5e1;color:#0f172a;font-weight:700;">Назначение платежа</th>' +
+              '<th style="width:140px;background:#f8fafc;padding:10px 12px;border-bottom:2px solid #cbd5e1;color:#0f172a;font-weight:700;">Категория</th>' +
+              '<th style="width:130px;text-align:right;background:#f8fafc;padding:10px 12px;border-bottom:2px solid #cbd5e1;color:#0f172a;font-weight:700;">Сумма</th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody>' +
+            (rowsHtml || '<tr><td colspan="5" style="text-align:center;padding:28px 16px;color:#64748b;font-style:italic;">Нет оплаченных счетов за этот год</td></tr>') +
+          '</tbody>' +
+        '</table>' +
+        '<div class="summary-box" style="margin-top:32px;padding:20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">' +
+          '<div class="summary-total" style="font-size:16px;font-weight:800;color:#0f172a;">ИТОГО ОПЛАЧЕНО ЗА ' + targetYear + ' Г.: ' + totalRubles.toLocaleString('ru-RU', { minimumFractionDigits: 2 }) + ' ₽</div>' +
+          '<div class="tax-hint" style="font-size:14px;font-weight:700;color:#16a34a;">Потенциальный налоговый вычет (13%): ' + taxReturn13.toLocaleString('ru-RU') + ' ₽</div>' +
+        '</div>' +
+        '<div class="stamp" style="margin-top:40px;border-top:1px dashed #94a3b8;padding-top:16px;font-size:12px;color:#64748b;text-align:center;">✓ Электронный реестр подтверждённых транзакций · МОЙ ПОРЯДОК: ПЛАТЕЖИ И ДЕЛА</div>';
+
+      var fullHtml = '<!DOCTYPE html>' +
         '<html lang="ru">' +
         '<head>' +
           '<meta charset="UTF-8">' +
           '<title>Справка о расходах на ЖКУ за ' + targetYear + ' год</title>' +
           '<style>' +
-            'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }' +
+            'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #0f172a; background: #ffffff; line-height: 1.5; }' +
             '.header { border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 24px; }' +
-            '.title { font-size: 20px; font-weight: bold; text-transform: uppercase; margin: 0 0 8px 0; }' +
+            '.title { font-size: 22px; font-weight: bold; text-transform: uppercase; margin: 0 0 8px 0; color: #0f172a; }' +
             '.meta { font-size: 13px; color: #64748b; }' +
             'table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }' +
-            'th { background: #f8fafc; padding: 10px 12px; border-bottom: 2px solid #cbd5e1; text-align: left; }' +
-            '.summary-box { margin-top: 32px; padding: 20px; background: #f1f5f9; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }' +
-            '.summary-total { font-size: 18px; font-weight: bold; color: #0f172a; }' +
+            'th { background: #f8fafc; padding: 10px 12px; border-bottom: 2px solid #cbd5e1; text-align: left; color: #0f172a; }' +
+            'td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #1e293b; }' +
+            '.summary-box { margin-top: 32px; padding: 20px; background: #f8fafc; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }' +
+            '.summary-total { font-size: 16px; font-weight: bold; color: #0f172a; }' +
             '.tax-hint { font-size: 14px; font-weight: 600; color: #16a34a; }' +
             '.stamp { margin-top: 40px; border-top: 1px dashed #94a3b8; padding-top: 16px; font-size: 12px; color: #64748b; text-align: center; }' +
           '</style>' +
         '</head>' +
         '<body>' +
-          '<div class="header">' +
-            '<h1 class="title">Справка-реестр расходов на оплату жилья и ЖКУ</h1>' +
-            '<div class="meta">Отчётный период: 01.01.' + targetYear + ' — 31.12.' + targetYear + ' · Сформировано в сервисе «Мой Порядок»</div>' +
-          '</div>' +
-          '<table>' +
-            '<thead>' +
-              '<tr>' +
-                '<th style="width:40px;text-align:center;">№</th>' +
-                '<th style="width:110px;">Дата</th>' +
-                '<th>Назначение платежа</th>' +
-                '<th style="width:140px;">Категория</th>' +
-                '<th style="width:130px;text-align:right;">Сумма</th>' +
-              '</tr>' +
-            '</thead>' +
-            '<tbody>' +
-              (rowsHtml || '<tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;">Нет оплаченных счетов за этот год</td></tr>') +
-            '</tbody>' +
-          '</table>' +
-          '<div class="summary-box">' +
-            '<div class="summary-total">ИТОГО ОПЛАЧЕНО ЗА ' + targetYear + ' Г.: ' + totalRubles.toLocaleString('ru-RU', { minimumFractionDigits: 2 }) + ' ₽</div>' +
-            '<div class="tax-hint">Потенциальный налоговый вычет (13%): ' + taxReturn13.toLocaleString('ru-RU') + ' ₽</div>' +
-          '</div>' +
-          '<div class="stamp">✓ Электронный реестр подтверждённых транзакций · МОЙ ПОРЯДОК: ПЛАТЕЖИ И ДЕЛА</div>' +
-          '<script>window.onload = function() { window.print(); };</script>' +
+          contentHtml +
+          '<script>window.onload = function() { window.print(); };<\/script>' +
         '</body>' +
         '</html>';
 
-      return html;
+      return fullHtml;
     });
   }
 
@@ -103,8 +107,20 @@
       return;
     }
 
+    if (window.Lazy && window.Lazy.loadStyle) {
+      window.Lazy.loadStyle('print').catch(function () {});
+    }
+
     generateTaxReportHtml(year).then(function (html) {
-      // Всегда открываем элегантный in-app предпросмотр (в мобильном VK popup-окна блокируются)
+      var prevHost = document.getElementById('tax-deduction-print-host');
+      if (prevHost && prevHost.parentNode) {
+        prevHost.parentNode.removeChild(prevHost);
+      }
+
+      // Извлекаем тело документа без обрамления <!DOCTYPE html> и <script>
+      var bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      var innerBody = bodyMatch ? bodyMatch[1].replace(/<script[\s\S]*?<\/script>/gi, '') : html;
+
       var host = document.createElement('div');
       host.id = 'tax-deduction-print-host';
       host.className = 'print-host';
@@ -114,22 +130,39 @@
           '<button type="button" class="btn btn--secondary" data-tax-action="close">Закрыть</button>' +
           '<span class="print-host__hint">В диалоге печати выберите «Сохранить как PDF».</span>' +
         '</div>' +
-        '<div class="print-host__paper" style="padding:24px;background:#ffffff;border-radius:12px;box-shadow:var(--shadow-md);max-width:840px;margin:16px auto;">' +
-          html.replace(/<!DOCTYPE html>[\s\S]*?<body>|<\/body>[\s\S]*?<\/html>/gi, '') +
+        '<div class="print-host__paper" style="background:#FFFFFF !important;color:#0F172A !important;">' +
+          innerBody +
         '</div>';
 
       document.body.appendChild(host);
       document.body.classList.add('printing-mode');
 
       function close() {
+        window.removeEventListener('keydown', onKeyDown);
         if (host && host.parentNode) host.parentNode.removeChild(host);
         document.body.classList.remove('printing-mode');
       }
 
-      host.querySelector('[data-tax-action="print"]').addEventListener('click', function () {
-        try { window.print(); } catch (e) {}
+      function onKeyDown(e) {
+        if (e.key === 'Escape') close();
+      }
+      window.addEventListener('keydown', onKeyDown);
+
+      host.addEventListener('click', function (e) {
+        if (e.target === host) close();
       });
-      host.querySelector('[data-tax-action="close"]').addEventListener('click', close);
+
+      var printBtn = host.querySelector('[data-tax-action="print"]');
+      if (printBtn) {
+        printBtn.addEventListener('click', function () {
+          try { window.print(); } catch (e) {}
+        });
+      }
+
+      var closeBtn = host.querySelector('[data-tax-action="close"]');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', close);
+      }
     });
   }
 

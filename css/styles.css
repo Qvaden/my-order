@@ -7036,6 +7036,177 @@ button.btn--icon:active {
   100% { transform: scale(1.15); }
 }
 
+/* ============================================================
+   Печать и полноэкранный предпросмотр документов (PRO)
+   ============================================================ */
+.print-host {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1200 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: rgba(15, 23, 42, 0.78) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  padding: var(--space-4, 16px) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.print-host__bar {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-surface, #FFFFFF);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.25);
+  margin-bottom: var(--space-4, 16px);
+  z-index: 1201;
+}
+
+[data-theme="dark"] .print-host__bar {
+  background: #1E293B;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.print-host__hint {
+  flex: 1 1 200px;
+  font-size: var(--fs-xs, 12px);
+  color: var(--color-text-secondary, #64748B);
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .print-host__hint {
+  color: #94A3B8;
+}
+
+.print-host__paper {
+  flex: 0 0 auto;
+  width: min(210mm, 100%);
+  margin: 0 auto var(--space-6, 24px);
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.35);
+  padding: 14mm 12mm;
+  box-sizing: border-box;
+}
+
+/* Документ на белой бумаге ВСЕГДА отображается тёмным текстом (в обеих темах приложения) */
+.print-host__paper,
+.print-host__paper *:not(.badge) {
+  color: #0F172A !important;
+}
+
+.print-host__paper .header {
+  border-bottom: 2px solid #0F172A !important;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.print-host__paper .title {
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0 0 8px 0;
+  color: #0F172A !important;
+}
+
+.print-host__paper .meta,
+.print-host__paper .stamp {
+  font-size: 13px;
+  color: #64748B !important;
+}
+
+.print-host__paper table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 13px;
+  background: transparent !important;
+}
+
+.print-host__paper th {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  padding: 10px 12px;
+  border-bottom: 2px solid #CBD5E1 !important;
+  text-align: left;
+  font-weight: 700;
+}
+
+.print-host__paper td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #E2E8F0 !important;
+  color: #1E293B !important;
+}
+
+.print-host__paper .summary-box {
+  margin-top: 32px;
+  padding: 20px;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.print-host__paper .summary-total {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0F172A !important;
+}
+
+.print-host__paper .tax-hint {
+  font-size: 14px;
+  font-weight: 700;
+  color: #16A34A !important;
+}
+
+.print-host__paper .stamp {
+  margin-top: 40px;
+  border-top: 1px dashed #94A3B8 !important;
+  padding-top: 16px;
+  font-size: 12px;
+  text-align: center;
+}
+
+body.printing-mode {
+  overflow: hidden !important;
+}
+
+/* Скрываем нижнюю панель навигации во время предпросмотра и печати */
+body.printing-mode .nav-bottom {
+  display: none !important;
+}
+
+@media print {
+  body.printing-mode > *:not(.print-host) {
+    display: none !important;
+  }
+  .print-host__bar {
+    display: none !important;
+  }
+  .print-host {
+    position: static !important;
+    inset: auto !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .print-host__paper {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
 /* 8. Home Score Pill & Achievements */
 .home-score-pill {
   display: inline-flex;
