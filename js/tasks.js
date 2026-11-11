@@ -361,10 +361,9 @@
     return '<section class="empty-state">' +
       '<div class="empty-state__icon" aria-hidden="true">\uD83D\uDDD3\uFE0F</div>' +
       '<h2 class="empty-state__title">Пока нет дел</h2>' +
-      '<p class="empty-state__text">Нажмите «+», чтобы добавить первую задачу, или выберите готовый чек-лист для дома.</p>' +
+      '<p class="empty-state__text">Добавьте первую задачу или воспользуйтесь готовыми чек-листами вверху.</p>' +
       '<div class="flex gap-2 justify-center flex-wrap">' +
-        '<button type="button" class="btn btn--primary" data-task-action="add">Добавить дело</button>' +
-        '<button type="button" class="btn btn--secondary" data-task-action="checklists">📋 Готовые чек-листы</button>' +
+        '<button type="button" class="btn btn--primary" data-task-action="add">+ Добавить дело</button>' +
       '</div>' +
     '</section>';
   }

@@ -72,17 +72,27 @@
      2. LAUNCH PARAMS (URL-параметры vk_*)
      ================================================================ */
 
+  /** Ручной выбор пользователя: 'light' | 'dark' | 'auto' | null */
+  var userThemePreference = null;
+  try {
+    var storedTheme = localStorage.getItem('myorder_user_theme');
+    if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'auto') {
+      userThemePreference = storedTheme === 'auto' ? null : storedTheme;
+    }
+  } catch (e) {}
+
   /**
-   * Читает тему из строки запуска.
-   *   vk_color_scheme — присылают клиенты VK ('space_dark', 'vk_dark',
-   *                     'bright_light', 'space_gray', ...);
-   *   theme           — ручной тест для разработчика: ?theme=dark включает
-   *                     тёмную тему в обычном браузере (см. критерий
-   *                     «переключается автоматически в VK или вручную тестом»).
+   * Читает тему из строки запуска или сохранённого выбора пользователя.
+   * 1. Сохранённый выбор пользователя (localStorage)
+   * 2. Тестовый GET-параметр ?theme=dark|light
+   * 3. Системный параметр ВКонтакте vk_color_scheme
    * @returns {string|null} 'dark' | 'light' | null
    */
   function themeFromLaunchParams() {
     try {
+      if (userThemePreference === 'dark' || userThemePreference === 'light') {
+        return userThemePreference;
+      }
       var p = new URLSearchParams(window.location.search);
       var manual = p.get('theme');
       if (manual) { return String(manual).toLowerCase() === 'dark' ? 'dark' : 'light'; }
@@ -120,9 +130,14 @@
    * Применяет тему ко всему документу.
    * data-theme на <html> — единая точка переключения для CSS.
    * @param {'light'|'dark'} theme
+   * @param {boolean} [isUserManual]
    */
-  function applyTheme(theme) {
+  function applyTheme(theme, isUserManual) {
     currentTheme = theme === 'dark' ? 'dark' : 'light';
+    if (isUserManual) {
+      userThemePreference = currentTheme;
+      try { localStorage.setItem('myorder_user_theme', currentTheme); } catch (e) {}
+    }
     var root = document.documentElement;
     root.setAttribute('data-theme', currentTheme);
     root.style.colorScheme = currentTheme;
@@ -144,6 +159,10 @@
     if (!detail || typeof detail !== 'object') { return; }
 
     if (detail.type === 'VKWebAppUpdateConfig') {
+      if (userThemePreference === 'dark' || userThemePreference === 'light') {
+        // Пользователь явно выбрал фиксированную тему, не перебиваем её из VK
+        return;
+      }
       var data = detail.data || {};
       var scheme = String(data.scheme || '');
       if (/dark/i.test(scheme)) {
@@ -390,10 +409,36 @@
     firstName: function () { return vkUser && vkUser.first_name ? String(vkUser.first_name) : ''; },
     /** @returns {Promise<?Object>} перечитать профиль */
     loadUser: loadUser,
-    /** Ручное переключение темы (тест-хук вне VK) */
-    setTheme: function (t) { applyTheme(t === 'dark' ? 'dark' : 'light'); },
-    /** Циклическая смена темы — для проверки без клиента VK */
-    toggleTheme: function () { applyTheme(currentTheme === 'dark' ? 'light' : 'dark'); },
+    /** Ручное переключение темы */
+    setTheme: function (t) { applyTheme(t === 'dark' ? 'dark' : 'light', true); },
+    /** Текущий режим темы ('light' | 'dark' | 'auto') */
+    themeMode: function () { return userThemePreference || 'auto'; },
+    /** Установка режима темы ('light' | 'dark' | 'auto') */
+    setThemeMode: function (mode) {
+      if (mode === 'auto') {
+        userThemePreference = null;
+        try { localStorage.removeItem('myorder_user_theme'); } catch (e) {}
+        var defaultTheme = null;
+        try {
+          var p = new URLSearchParams(window.location.search);
+          var scheme = p.get('vk_color_scheme');
+          if (scheme) { defaultTheme = /dark/i.test(scheme) ? 'dark' : 'light'; }
+        } catch (e) {}
+        applyTheme(defaultTheme || 'light', false);
+        return currentTheme;
+      }
+      if (mode === 'dark' || mode === 'light') {
+        applyTheme(mode, true);
+        return currentTheme;
+      }
+      return currentTheme;
+    },
+    /** Циклическая смена темы — переключает светлую/тёмную */
+    toggleTheme: function () {
+      var next = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(next, true);
+      return next;
+    },
     /** @returns {Promise<void>} */
     share: shareApp,
     /** @returns {Function} отмена показа */

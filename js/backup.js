@@ -1087,6 +1087,19 @@
         '<h3 class="backup-section__title">Оформление и интерфейс</h3>' +
         '<p class="backup-section__desc">Настройте тему, размер шрифта и виджеты главного экрана под себя.</p>' +
 
+        /* Тема оформления (Светлая / Тёмная / Как в VK) */
+        (function () {
+          var mode = (window.VK && window.VK.themeMode) ? window.VK.themeMode() : 'auto';
+          return '<div style="margin-bottom:var(--space-4);">' +
+            '<label class="form-label">Тема оформления</label>' +
+            '<div class="font-size-segments" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">' +
+              '<button type="button" class="font-size-btn' + (mode === 'light' ? ' font-size-btn--active' : '') + '" data-theme-mode="light">☀️ Светлая</button>' +
+              '<button type="button" class="font-size-btn' + (mode === 'dark' ? ' font-size-btn--active' : '') + '" data-theme-mode="dark">🌙 Тёмная</button>' +
+              '<button type="button" class="font-size-btn' + (mode === 'auto' ? ' font-size-btn--active' : '') + '" data-theme-mode="auto">🔄 Как в VK</button>' +
+            '</div>' +
+          '</div>';
+        })() +
+
         /* Акцентный цвет (PRO) */
         '<div style="margin-bottom:var(--space-4);">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;">' +
@@ -1225,6 +1238,18 @@
   }
 
   function bindPersonalizationHandlers(el) {
+    // 0. Выбор темы (Светлая / Тёмная / Как в VK)
+    var themeBtns = el.querySelectorAll('[data-theme-mode]');
+    Array.prototype.forEach.call(themeBtns, function (btn) {
+      btn.addEventListener('click', function () {
+        var mode = btn.getAttribute('data-theme-mode');
+        if (window.VK && window.VK.setThemeMode) {
+          window.VK.setThemeMode(mode);
+          render();
+        }
+      });
+    });
+
     var p = window.Personalization;
     if (!p) return;
 
@@ -1384,7 +1409,7 @@
     var el = getAppEl();
     if (!el) return;
 
-    el.innerHTML = '<header class="page-header">Резервные копии</header>' +
+    el.innerHTML = '<header class="page-header">Настройки и данные</header>' +
       securityNoticeHtml() +
       exportSectionHtml() +
       importSectionHtml() +

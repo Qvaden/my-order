@@ -23,16 +23,20 @@
     (function () {
       var theme = null;
       try {
-        var q = window.location.search;
-        // Ручной тест-переключатель (?theme=dark) имеет приоритет над клиентом
-        var manual = /[?&]theme=([^&]+)/.exec(q);
-        if (manual) {
-          theme = decodeURIComponent(manual[1]).toLowerCase() === 'dark' ? 'dark' : 'light';
+        var userTheme = localStorage.getItem('myorder_user_theme');
+        if (userTheme === 'dark' || userTheme === 'light') {
+          theme = userTheme;
         } else {
-          var m = /[?&]vk_color_scheme=([^&]+)/.exec(q);
-          if (m) { theme = /dark/i.test(decodeURIComponent(m[1])) ? 'dark' : 'light'; }
+          var q = window.location.search;
+          var manual = /[?&]theme=([^&]+)/.exec(q);
+          if (manual) {
+            theme = decodeURIComponent(manual[1]).toLowerCase() === 'dark' ? 'dark' : 'light';
+          } else {
+            var m = /[?&]vk_color_scheme=([^&]+)/.exec(q);
+            if (m) { theme = /dark/i.test(decodeURIComponent(m[1])) ? 'dark' : 'light'; }
+          }
         }
-      } catch (e) { /* разбираем URL аккуратно — тема не критична */ }
+      } catch (e) { /* разбираем аккуратно */ }
       if (theme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         document.documentElement.style.colorScheme = 'dark';

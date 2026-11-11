@@ -152,6 +152,16 @@
     }
   }
 
+  function themeButtonHtml() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return '<button type="button" class="home-theme-btn" data-home-action="theme" ' +
+      'aria-label="Сменить тему оформления" title="' + (isDark ? 'Включить светлую тему' : 'Включить тёмную тему') + '">' +
+      (isDark
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>') +
+    '</button>';
+  }
+
   /**
    * Рисует каркас главного экрана (скелетоны вместо цифр).
    * @returns {string}
@@ -167,7 +177,8 @@
             '</div>'
           : '') +
         shareButtonHtml() +
-        '<button type="button" class="home-gear-btn" data-home-action="backup" aria-label="Резервные копии">' +
+        themeButtonHtml() +
+        '<button type="button" class="home-gear-btn" data-home-action="backup" aria-label="Настройки и резервные копии" title="Настройки">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
             'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:22px;height:22px;">' +
             '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>' +
@@ -600,6 +611,23 @@
       var gearBtn = e.target.closest('[data-home-action="backup"]');
       if (gearBtn) {
         navigate('backup');
+        return;
+      }
+
+      /* Кнопка смены темы оформления (☀️ / 🌙) */
+      var themeBtn = e.target.closest('[data-home-action="theme"]');
+      if (themeBtn) {
+        if (window.VK && window.VK.toggleTheme) {
+          var nextTheme = window.VK.toggleTheme();
+          var isDark = nextTheme === 'dark';
+          themeBtn.setAttribute('title', isDark ? 'Включить светлую тему' : 'Включить тёмную тему');
+          themeBtn.innerHTML = isDark
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+          if (window.showToast) {
+            window.showToast(isDark ? 'Включена тёмная тема' : 'Включена светлая тема', 'info');
+          }
+        }
         return;
       }
 
