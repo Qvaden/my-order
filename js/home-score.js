@@ -110,9 +110,9 @@
 
       var score = Math.max(15, Math.min(100, 100 - deductions));
 
-      // Если в базе совсем пусто — ставим дружелюбные 95%
-      if (payments.length === 0 && tasks.length === 0) {
-        score = 95;
+      // Если в базе совсем пусто или всё закрыто — ставим 100%
+      if (deductions === 0 || (payments.length === 0 && tasks.length === 0)) {
+        score = 100;
       }
 
       var isPin = Boolean(window.Security && window.Security.isPinSet && window.Security.isPinSet());

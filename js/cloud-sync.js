@@ -767,8 +767,14 @@
      11. ПЕРИОДИЧЕСКАЯ ПРОВЕРКА И СОБЫТИЯ ВКЛАДКИ
      ================================================================ */
 
+  var autoPushTimer = null;
   function onDbChange() {
     markDirty();
+    if (!proActive()) { return; }
+    if (autoPushTimer) { clearTimeout(autoPushTimer); }
+    autoPushTimer = setTimeout(function () {
+      pushNow({ silent: true });
+    }, 2500);
   }
 
   function tick() {
@@ -827,6 +833,56 @@
      ================================================================ */
 
   /**
+   * Автоматическая синхронизация при открытии приложения.
+   * Читает облако ВКонтакте: если в облаке копия новее или локальная база пуста,
+   * автоматически восстанавливает актуальные данные пользователя.
+   */
+  function syncOnStartup() {
+    if (!proActive()) { return Promise.resolve(); }
+    var bridge = bridgeOf();
+    if (!bridge || typeof bridge.send !== 'function') { return Promise.resolve(); }
+
+    return pullFromVkStorage().then(function (res) {
+      if (!res || !res.ok || !res.dump || !res.dump.data) {
+        if (isDirty()) { pushNow({ silent: true }); }
+        return;
+      }
+
+      var cloudAt = (res.dump && res.dump.exportDate) || '';
+      var localLast = lsGet(KEY_LAST) || '';
+
+      if (!window.DB) { return; }
+
+      return Promise.all([
+        window.DB.getAll('payments'),
+        window.DB.getAll('tasks'),
+        window.DB.getAll('meters')
+      ]).then(function (stores) {
+        var localCount = (stores[0] || []).length + (stores[1] || []).length + (stores[2] || []).length;
+        var cloudCount = (res.dump.data.payments || []).length + (res.dump.data.tasks || []).length + (res.dump.data.meters || []).length;
+
+        var isCloudNewer = cloudAt && (!localLast || cloudAt > localLast);
+        var shouldRestore = (localCount === 0 && cloudCount > 0) || (isCloudNewer && !isDirty());
+
+        if (shouldRestore && window.Backup && window.Backup.importDump) {
+          console.info('[CloudSync] Синхронизация при запуске: подгружаем актуальные данные из облака VK...');
+          return window.Backup.importDump(res.dump).then(function () {
+            markClean();
+            if (cloudAt) { lsSet(KEY_LAST, cloudAt); }
+            if (window.App && window.App.getCurrentRoute) {
+              window.App.renderSection(window.App.getCurrentRoute());
+            }
+          });
+        } else if (isDirty()) {
+          pushNow({ silent: true });
+        }
+      });
+    }).catch(function (err) {
+      console.info('[CloudSync] Ошибка фоновой синхронизации (пропускаем):', err && err.message);
+    });
+  }
+
+  /**
    * Точка входа. Вызывается из app.js после готовности БД и только при PRO:
    * Free не должен платить ни за таймеры, ни за лишние слушатели.
    */
@@ -841,6 +897,7 @@
 
     bind();
     checkReminder();
+    syncOnStartup();
     if (window.Family && window.Family.isActive && window.Family.isActive()) {
       window.Family.pullNow({ silent: true });
     }
@@ -892,6 +949,7 @@
 
     // Канал 2 — VK Storage
     pullFromVkStorage: pullFromVkStorage,
+    syncOnStartup: syncOnStartup,
 
     // Канал 3 — прокси
     readProxy: readProxy,

@@ -2049,38 +2049,30 @@
 
     var restore = busy(btn, 'Сохраняем…');
 
-    // FSAA требует пользовательский жест — он у нас есть (это click),
-    // поэтому диалог выбора папки покажется нормально
-    if (window.CloudSync.fsaaSupported()) {
-      window.CloudSync.saveToCloudFile({ forceNew: !window.CloudSync.hasAutoFile() })
+    // Если пользователь уже выбрал локальную облачную папку — обновляем её
+    if (window.CloudSync.hasAutoFile()) {
+      window.CloudSync.saveToCloudFile({ forceNew: false })
         .then(function (res) {
-          if (res.cancelled) {
-            showStatus(el, 'cloud', 'Выбор папки отменён — ничего не сохранено.', 'info');
-            return;
+          if (res.saved) {
+            refreshWithStatus('cloud', res.message + ' · ' + backupAgeLabel(window.CloudSync.getLastBackupAt()), 'ok');
           }
-          if (!res.saved) {
-            showStatus(el, 'cloud', res.message || 'Сохранить не удалось.', 'error');
-            return;
-          }
-          refreshWithStatus('cloud', res.message + ' · ' + backupAgeLabel(window.CloudSync.getLastBackupAt()), 'ok');
         })
         .catch(function (err) {
-          console.info('[Backup] Облачное сохранение не удалось:', err && err.message || err);
-          showStatus(el, 'cloud', 'Не удалось сохранить: ' + err.message +
-            '. Скачайте обычную резервную копию выше.', 'error');
+          showStatus(el, 'cloud', 'Не удалось сохранить: ' + err.message, 'error');
         })
         .finally(restore);
       return;
     }
 
-    // FSAA нет (например Firefox desktop): пробуем VK Storage, иначе прокси
+    // Основная синхронизация через VK Cloud Storage — связывает ПК и мобильный телефон
     window.CloudSync.pushNow({ force: true })
       .then(function (res) {
         if (res.ran && res.channel === 'vk') {
-          refreshWithStatus('cloud', res.message, 'ok');
+          refreshWithStatus('cloud', 'Синхронизировано с облаком ВКонтакте! Доступно на телефоне и ПК.', 'ok');
+        } else if (res.ran && res.channel === 'file') {
+          refreshWithStatus('cloud', res.message + ' · ' + backupAgeLabel(window.CloudSync.getLastBackupAt()), 'ok');
         } else if (res.ran) {
-          refreshWithStatus('cloud', res.message +
-            '. Чтобы перенести данные на другое устройство, скачайте обычную резервную копию.', 'warn');
+          refreshWithStatus('cloud', res.message, 'ok');
         } else {
           refreshWithStatus('cloud', 'Облако недоступно: ' + (res.message || 'нет канала сохранения'), 'error');
         }
@@ -2142,33 +2134,30 @@
         });
     }
 
-    if (window.CloudSync.fsaaSupported()) {
-      window.CloudSync.loadFromCloudFile()
-        .then(function (res) {
-          if (res.cancelled) {
-            showStatus(el, 'cloud', 'Выбор файла отменён.', 'info');
-            return;
-          }
-          if (!res.dump) {
-            showStatus(el, 'cloud', res.message, 'error');
-            return;
-          }
-          applyDump(res.dump, res.fileName);
-        })
-        .catch(function (err) {
-          showStatus(el, 'cloud', 'Не удалось прочитать файл: ' + err.message, 'error');
-        })
-        .finally(restore);
-      return;
-    }
-
+    // Сначала пробуем получить данные из облака ВКонтакте (доступно на всех устройствах)
     window.CloudSync.pullFromVkStorage()
       .then(function (res) {
-        if (!res.ok) {
-          showStatus(el, 'cloud', res.message, 'error');
+        if (res.ok && res.dump) {
+          applyDump(res.dump, 'облака ВКонтакте');
           return;
         }
-        applyDump(res.dump, 'облако ВКонтакте');
+
+        // Если в VK Storage нет, но поддерживается локальный файл в облачной папке
+        if (window.CloudSync.fsaaSupported()) {
+          return window.CloudSync.loadFromCloudFile().then(function (fRes) {
+            if (fRes.cancelled) {
+              showStatus(el, 'cloud', 'Выбор файла отменён.', 'info');
+              return;
+            }
+            if (!fRes.dump) {
+              showStatus(el, 'cloud', fRes.message, 'error');
+              return;
+            }
+            applyDump(fRes.dump, fRes.fileName);
+          });
+        }
+
+        showStatus(el, 'cloud', res.message || 'Копия в облаке не найдена.', 'warn');
       })
       .catch(function (err) {
         showStatus(el, 'cloud', 'Ошибка: ' + err.message, 'error');
