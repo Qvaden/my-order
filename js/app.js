@@ -171,6 +171,7 @@
       '<header class="home-hero">' +
         '<p class="home-hero__greeting">' + escHome(greetingLine()) + '</p>' +
         '<h1 class="home-hero__date">' + todayLabel() + '</h1>' +
+        (window.Properties ? window.Properties.pillHtml() : '') +
         (window.Family && window.Family.activeName && window.Family.activeName()
           ? '<div class="home-hero__family" aria-label="Семья: ' + escHome(window.Family.activeName()) + '">' +
               '<span class="home-hero__family-badge">👥 ' + escHome(window.Family.activeName()) + '</span>' +
@@ -411,12 +412,22 @@
           '<div class="home-bento-hero__content">' +
             '<h3 class="home-bento-hero__title">' + bentoTitle + '</h3>' +
             '<p class="home-bento-hero__desc">' + bentoDesc + '</p>' +
+            '<div id="home-score-wrap"></div>' +
             (isPro
-              ? '<span class="home-bento-hero__pro-badge">👑 Умный радар: бюджет под контролем</span>'
+              ? '<div style="margin-top:6px;"><span class="home-bento-hero__pro-badge">👑 Умный радар: бюджет под контролем</span></div>'
               : '') +
           '</div>' +
         '</div>' +
       '</div>';
+
+      if (window.HomeScore && window.HomeScore.calculate) {
+        window.HomeScore.calculate().then(function (scoreData) {
+          var sWrap = document.getElementById('home-score-wrap');
+          if (sWrap) {
+            sWrap.innerHTML = window.HomeScore.badgeHtml(scoreData);
+          }
+        });
+      }
     }
 
     if (window.SmartRadar && window.SmartRadar.bindBarEvents) {

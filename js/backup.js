@@ -789,6 +789,9 @@
           '<button type="button" class="btn btn--secondary" data-backup-action="csv-export">' +
             '📊 Таблица Excel (.CSV)' +
           '</button>' +
+          '<button type="button" class="btn btn--secondary" data-backup-action="tax-deduction">' +
+            '📑 Справка 3-НДФЛ (вычет 13%)' +
+          '</button>' +
         '</div>' +
         '<div class="backup-status" data-backup-status="pdf"></div>' +
       '</div>';
@@ -1613,7 +1616,12 @@
       'buy-pro': handleBuyPro,
       'manage-subscription': handleManageSubscription,
       'promo-code': handlePromoCodeModal,
-      'owner-panel': handleOwnerPanelModal
+      'owner-panel': handleOwnerPanelModal,
+      'tax-deduction': function () {
+        if (window.TaxDeduction && window.TaxDeduction.openReport) {
+          window.TaxDeduction.openReport();
+        }
+      }
     };
 
     Object.keys(map).forEach(function (action) {

@@ -204,6 +204,7 @@
         '<input type="text" class="quick-add-box__input" data-quick-input="true" ' +
           'placeholder="Умная строка: «Свет 340», «Интернет 650 до 25» или дело..." ' +
           'aria-label="Умная строка быстрого добавления">' +
+        '<button type="button" class="quick-add-box__voice" data-voice-btn="true" aria-label="Голосовой ввод" title="Сказать голосом">🎙️</button>' +
         '<button type="button" class="quick-add-box__btn" data-quick-btn="true">Добавить</button>' +
       '</div>' +
       '<div class="quick-add-preview-wrap" data-quick-preview="true" style="display:none;"></div>';

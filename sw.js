@@ -41,7 +41,7 @@
  * старые стили панели (иконки 40px, красная точка вместо статуса), поэтому
  * без нового имени экран остался бы в прежнем виде до жёсткой перезагрузки.
  */
-var CACHE_NAME = 'myorder-v12-21';
+var CACHE_NAME = 'myorder-v12-22';
 
 /**
  * Core-файлы, обязательные для офлайн-работы.
@@ -85,7 +85,11 @@ var PRECACHE_URLS = [
   'js/micro-fx.js',
   'js/value-pack.js',
   'js/swipe-actions.js',
-  'js/smart-radar.js'
+  'js/smart-radar.js',
+  'js/home-score.js',
+  'js/voice-input.js',
+  'js/properties.js',
+  'js/tax-deduction.js'
 ];
 
 /**
