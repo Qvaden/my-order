@@ -484,6 +484,34 @@
     notify: notify,
     /** @returns {Promise<boolean>} */
     copyText: copyText,
+    /**
+     * Тактильный отклик через VK Bridge или Web Vibration API.
+     * @param {'impact'|'notification'|'selection'} [type='impact']
+     * @param {string} [style='light'] 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error'
+     */
+    taptic: function (type, style) {
+      try {
+        if (bridge && typeof bridge.send === 'function' && isVK()) {
+          if (type === 'notification') {
+            bridge.send('VKWebAppTapticNotificationOccurred', { result: style || 'success' }).catch(function () {});
+            return;
+          }
+          if (type === 'selection') {
+            bridge.send('VKWebAppTapticSelectionChanged').catch(function () {});
+            return;
+          }
+          bridge.send('VKWebAppTapticImpactOccurred', { style: style || 'light' }).catch(function () {});
+          return;
+        }
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          if (type === 'notification' && style === 'success') {
+            navigator.vibrate([15, 60, 25]);
+          } else {
+            navigator.vibrate(12);
+          }
+        }
+      } catch (e) {}
+    },
     /** Ссылка на сырой bridge (для Pro-модуля и будущих этапов) */
     bridge: function () { return bridge; }
   };

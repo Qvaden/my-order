@@ -6577,3 +6577,322 @@ button.btn--icon:active {
     transform: translateY(0);
   }
 }
+
+/* ================================================================
+   13. Премиальные компоненты: Bento Hero, iOS Swipe, Smart Radar, Quick Add
+   ================================================================ */
+
+/* 1. Адаптивность шапки разделов (защита от наложения кнопок на мобильных) */
+@media (max-width: 420px) {
+  .header-actions {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .header-actions .page-header {
+    width: 100%;
+    margin-bottom: var(--space-1);
+  }
+}
+
+/* 2. Bento Hero Card на Главной */
+.home-bento-hero {
+  position: relative;
+  background: var(--surface-card, rgba(255, 255, 255, 0.85));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-2xl, 24px);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.06), 0 2px 6px -2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="dark"] .home-bento-hero {
+  background: rgba(30, 36, 48, 0.82);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 28px -6px rgba(0, 0, 0, 0.35);
+}
+
+.home-bento-hero__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.home-bento-hero__ring-wrap {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+}
+
+.home-bento-hero__ring-svg {
+  width: 76px;
+  height: 76px;
+  transform: rotate(-90deg);
+}
+
+.home-bento-hero__ring-bg {
+  stroke: var(--surface-secondary, rgba(0, 0, 0, 0.06));
+}
+
+[data-theme="dark"] .home-bento-hero__ring-bg {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.home-bento-hero__ring-fill {
+  stroke: var(--color-primary, #2563EB);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.home-bento-hero__ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-sm, 13px);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.home-bento-hero__ring-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.home-bento-hero__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-bento-hero__title {
+  font-size: var(--fs-base, 15px);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  line-height: 1.25;
+}
+
+.home-bento-hero__desc {
+  font-size: var(--fs-xs, 12px);
+  color: var(--text-secondary);
+  margin: 0 0 6px 0;
+  line-height: 1.35;
+}
+
+.home-bento-hero__pro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #D97706;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-full, 9999px);
+  padding: 2px 8px;
+}
+
+[data-theme="dark"] .home-bento-hero__pro-badge {
+  color: #FBBF24;
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+/* 3. iOS-style Swipe Actions */
+.swipe-item-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl, 16px);
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.swipe-action-tray {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.swipe-action-tray--right {
+  left: 0;
+  background: linear-gradient(135deg, #10B981, #059669);
+  justify-content: flex-start;
+  padding-left: 20px;
+  border-radius: var(--radius-xl, 16px) 0 0 var(--radius-xl, 16px);
+}
+
+.swipe-action-tray--left {
+  right: 0;
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  justify-content: flex-end;
+  padding-right: 20px;
+  border-radius: 0 var(--radius-xl, 16px) var(--radius-xl, 16px) 0;
+}
+
+.swipe-card-surface {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.swipe-card-surface.is-dragging {
+  transition: none;
+}
+
+/* 4. Smart Quick Add Magic (PRO) */
+.quick-add-box {
+  background: var(--surface-card, rgba(255, 255, 255, 0.85));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-xl, 18px);
+  padding: 10px 14px;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px -3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .quick-add-box {
+  background: rgba(30, 36, 48, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.quick-add-box__icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.quick-add-box__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: var(--fs-sm, 14px);
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+}
+
+.quick-add-box__input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.quick-add-box__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-primary, #2563EB);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.quick-add-box__btn:active {
+  transform: scale(0.95);
+}
+
+.quick-add-preview {
+  margin-top: -6px;
+  margin-bottom: var(--space-4);
+  padding: 8px 12px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: var(--radius-md, 12px);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  animation: settingsFadeIn 0.2s ease;
+}
+
+[data-theme="dark"] .quick-add-preview {
+  background: rgba(37, 99, 235, 0.18);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+/* 5. Smart Radar Insights (PRO) */
+.smart-radar-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(139, 92, 246, 0.06));
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: var(--radius-xl, 18px);
+  padding: 12px 16px;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+[data-theme="dark"] .smart-radar-card {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(139, 92, 246, 0.14));
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.smart-radar-card__icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.smart-radar-card__content {
+  flex: 1;
+}
+
+.smart-radar-card__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 2px 0;
+}
+
+.smart-radar-card__text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* 6. Family Member Badge */
+.family-author-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.08);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}

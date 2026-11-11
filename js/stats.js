@@ -1166,17 +1166,34 @@
           (window.ValuePack.renderSavingsGoalHtml ? window.ValuePack.renderSavingsGoalHtml() : '');
       }
 
+      var smartRadarSectionHtml = (window.SmartRadar
+        ? '<div class="stats-section stats-section--pro pro-analytics" data-pro-only="smart-radar">' +
+            '<h2 class="stats-section__title">Умный финансовый радар <span class="pro-badge">PRO</span></h2>' +
+            '<div id="stats-smart-radar-content"></div>' +
+          '</div>'
+        : '');
+
       var holder = document.createElement('div');
       holder.innerHTML =
         forecastHtml(buildForecast(payments)) +
         comparisonHtml(buildComparison(payments)) +
         heatmapHtml(buildWeekdayMatrix(payments, tasks)) +
+        smartRadarSectionHtml +
         extraProHtml +
         valuePackHtml +
         calendarExportHtml();
 
       var nodes = [].slice.call(holder.children);
       for (var i = 0; i < nodes.length; i++) { el.appendChild(nodes[i]); }
+
+      if (window.SmartRadar && window.SmartRadar.insights) {
+        window.SmartRadar.insights().then(function (ins) {
+          var rBox = document.getElementById('stats-smart-radar-content');
+          if (rBox) {
+            rBox.innerHTML = window.SmartRadar.radarHtml(ins);
+          }
+        });
+      }
 
       var fills = el.querySelectorAll('[data-target-width]');
       /* Ширину ставим в СЛЕДУЮЩЕМ кадре: если присвоить её сразу после

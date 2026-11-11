@@ -196,6 +196,7 @@
     var blocks = {
       summary: function () {
         return '' +
+          '<div id="home-bento-hero-wrap"></div>' +
           '<div class="home-summary-grid">' +
             '<div class="skeleton" style="height:76px;border-radius:var(--radius-xl);"></div>' +
             '<div class="skeleton" style="height:76px;border-radius:var(--radius-xl);"></div>' +
@@ -212,7 +213,8 @@
           '</button>';
       },
       quickActions: function () {
-        return (window.QuickActions ? window.QuickActions.panelHtml() : '');
+        return (window.QuickActions ? window.QuickActions.panelHtml() : '') +
+          (window.SmartRadar ? window.SmartRadar.barHtml() : '');
       },
       upcoming: function () {
         return '<section class="home-today" id="home-today"></section>';
@@ -374,6 +376,52 @@
   function paintHomeSummary(s) {
     var box = document.querySelector('.home-summary-grid');
     if (!box) { return; }
+
+    /* Bento Hero Card с кольцом прогресса месяца */
+    var bentoWrap = document.getElementById('home-bento-hero-wrap');
+    if (bentoWrap) {
+      var totalItems = (s.paymentsTotal || 0) + (s.tasksTotal || 0);
+      var pendingItems = (s.pendingCount || 0) + (s.todayCount || 0);
+      var doneItems = Math.max(0, totalItems - pendingItems);
+      var pct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 100;
+      var C = 188.5; // 2 * PI * 30
+      var strokeOffset = C - (pct / 100) * C;
+      var isPerfect = pct === 100;
+
+      var bentoTitle = isPerfect ? 'Всё выполнено! 🎉' : (pct + '% месяца закрыто');
+      var bentoDesc = isPerfect
+        ? 'Все счета оплачены и срочных дел нет. Отличная работа!'
+        : (s.pendingCount > 0 ? ('Ожидает оплаты: ' + s.pendingMoney + ' · передать ' + s.needReading + ' счётч.') : 'Остались только плановые дела');
+
+      var isPro = Boolean(window.ProManager && window.ProManager.isPro && window.ProManager.isPro());
+
+      bentoWrap.innerHTML = '<div class="home-bento-hero">' +
+        '<div class="home-bento-hero__inner">' +
+          '<div class="home-bento-hero__ring-wrap">' +
+            '<svg class="home-bento-hero__ring-svg" viewBox="0 0 76 76">' +
+              '<circle class="home-bento-hero__ring-bg" cx="38" cy="38" r="30" fill="none" stroke-width="6"/>' +
+              '<circle class="home-bento-hero__ring-fill" cx="38" cy="38" r="30" fill="none" stroke-width="6" ' +
+                'stroke-dasharray="' + C + '" stroke-dashoffset="' + strokeOffset + '"/>' +
+            '</svg>' +
+            '<div class="home-bento-hero__ring-text">' +
+              '<span>' + pct + '%</span>' +
+              '<span class="home-bento-hero__ring-sub">порядок</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="home-bento-hero__content">' +
+            '<h3 class="home-bento-hero__title">' + bentoTitle + '</h3>' +
+            '<p class="home-bento-hero__desc">' + bentoDesc + '</p>' +
+            (isPro
+              ? '<span class="home-bento-hero__pro-badge">👑 Умный радар: бюджет под контролем</span>'
+              : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    if (window.SmartRadar && window.SmartRadar.bindBarEvents) {
+      window.SmartRadar.bindBarEvents();
+    }
 
     /* Панель быстрых действий: ей нужен не только счётчик, но и признак
        просрочки — от него зависит тон бейджа. Отдельный запрос не делаем:

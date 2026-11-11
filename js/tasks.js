@@ -532,10 +532,15 @@
         '</button>' +
       '</div>' +
     '</div>' +
+    (window.SmartRadar ? window.SmartRadar.barHtml() : '') +
     urgentBannersHtml() +
     (tasks.length > 0 ? '<div class="filter-row mb-3">' + chips + scopeChips + '</div>' : '') +
     (activeFilter === 'archived' ? '<button type="button" class="btn btn--ghost" style="margin-bottom:var(--space-3);" data-task-action="clear-archive">&#x267B; Очистить архив</button>' : '') +
     body;
+
+    if (window.SmartRadar && window.SmartRadar.bindBarEvents) {
+      window.SmartRadar.bindBarEvents();
+    }
   }
 
   /* Видимые задачи с учётом фильтра и сортировки */

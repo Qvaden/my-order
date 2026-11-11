@@ -65,10 +65,15 @@
     var shared = record.familyScope === 'family' || record.familyScoped === true;
     var title = shared ? 'Общая запись семьи' : 'Личная запись — не передаётся семье';
 
+    var author = '';
+    if (record.authorName) {
+      author = '<span class="family-author-badge" title="Автор: ' + record.authorName + '">👤 ' + record.authorName + '</span>';
+    }
+
     return '<span class="family-flag' + (shared ? ' family-flag--shared' : '') + '" ' +
       'title="' + title + '" aria-label="' + title + '">' +
       (shared ? '\uD83D\uDC65' : '\uD83D\uDD12') +
-      '</span>';
+      '</span>' + author;
   }
 
   /**
