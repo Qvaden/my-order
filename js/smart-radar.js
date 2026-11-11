@@ -174,6 +174,9 @@
       if (window.VK && window.VK.firstName) {
         item.authorName = window.VK.firstName();
       }
+      if (window.Properties && window.Properties.stamp) {
+        window.Properties.stamp(item);
+      }
       return window.DB.add('payments', item);
     }
 
@@ -186,6 +189,9 @@
       delete taskItem.id;
       if (window.VK && window.VK.firstName) {
         taskItem.authorName = window.VK.firstName();
+      }
+      if (window.Properties && window.Properties.stamp) {
+        window.Properties.stamp(taskItem);
       }
       return window.DB.add('tasks', taskItem);
     }

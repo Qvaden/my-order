@@ -512,10 +512,14 @@
     /* Этап 12.7: чипы доступа (пусто вне семьи) */
     var scopeChips = window.FamilyUI ? window.FamilyUI.scopeChips('data-scope-filter') : '';
 
+    var scopedTasks = (window.Properties && window.Properties.filter)
+      ? window.Properties.filter(tasks)
+      : tasks;
+
     var visible = visibleTasks();
 
     var body;
-    if (tasks.length === 0) {
+    if (scopedTasks.length === 0) {
       body = emptyHtml();
     } else if (visible.length === 0) {
       body = noResultsHtml();
@@ -545,7 +549,9 @@
 
   /* Видимые задачи с учётом фильтра и сортировки */
   function visibleTasks() {
-    var list = tasks.slice();
+    var list = (window.Properties && window.Properties.filter)
+      ? window.Properties.filter(tasks)
+      : tasks.slice();
 
     /* Этап 12.7: мягко удалённые по семье не показываем; чипы
        «👥 Семейные / 🔒 Личные» */
@@ -1046,6 +1052,10 @@
     /* Этап 12.7: владелец / семья / флаг доступа — за Family */
     if (window.Family && window.Family.stampScope) {
       window.Family.stampScope(data, STORE, Boolean(editingId));
+    }
+
+    if (window.Properties && window.Properties.stamp) {
+      window.Properties.stamp(data);
     }
 
     var op = editingId

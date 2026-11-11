@@ -424,7 +424,11 @@
     var el = appEl();
     if (!el) { return; }
 
-    var visibleMeters = meters.filter(function (m) {
+    var scopedMeters = (window.Properties && window.Properties.filter)
+      ? window.Properties.filter(meters)
+      : meters;
+
+    var visibleMeters = scopedMeters.filter(function (m) {
       return !(window.FamilyUI && window.FamilyUI.isHidden(m));
     });
 
@@ -718,6 +722,10 @@
 
     if (window.Family && window.Family.stampScope) {
       window.Family.stampScope(data, STORE_METERS, false);
+    }
+
+    if (window.Properties && window.Properties.stamp) {
+      window.Properties.stamp(data);
     }
 
     DB.add(STORE_METERS, data).then(function () {

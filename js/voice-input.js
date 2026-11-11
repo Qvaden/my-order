@@ -82,11 +82,17 @@
 
       recognition.onerror = function (event) {
         console.warn('[VoiceInput] Ошибка распознавания:', event.error);
-        if (event.error === 'not-allowed') {
+        if (event.error === 'not-allowed' || event.error === 'audio-capture') {
           if (window.VK && window.VK.notify) {
-            window.VK.notify('Разрешите доступ к микрофону в настройках', 'error');
+            window.VK.notify('Разрешите доступ к микрофону в настройках устройства', 'error');
           }
         }
+        if (triggerBtn) {
+          triggerBtn.classList.remove('is-listening');
+          triggerBtn.innerHTML = '🎙️';
+          triggerBtn.setAttribute('title', 'Голосовой ввод');
+        }
+        isRecording = false;
       };
 
       recognition.onend = function () {

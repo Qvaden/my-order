@@ -104,15 +104,32 @@
     }
 
     generateTaxReportHtml(year).then(function (html) {
-      var w = window.open('', '_blank');
-      if (w) {
-        w.document.write(html);
-        w.document.close();
-      } else {
-        if (window.VK && window.VK.notify) {
-          window.VK.notify('Разрешите всплывающие окна для печати отчёта', 'error');
-        }
+      // Всегда открываем элегантный in-app предпросмотр (в мобильном VK popup-окна блокируются)
+      var host = document.createElement('div');
+      host.id = 'tax-deduction-print-host';
+      host.className = 'print-host';
+      host.innerHTML =
+        '<div class="print-host__bar">' +
+          '<button type="button" class="btn btn--primary" data-tax-action="print">Печать / Сохранить в PDF</button>' +
+          '<button type="button" class="btn btn--secondary" data-tax-action="close">Закрыть</button>' +
+          '<span class="print-host__hint">В диалоге печати выберите «Сохранить как PDF».</span>' +
+        '</div>' +
+        '<div class="print-host__paper" style="padding:24px;background:#ffffff;border-radius:12px;box-shadow:var(--shadow-md);max-width:840px;margin:16px auto;">' +
+          html.replace(/<!DOCTYPE html>[\s\S]*?<body>|<\/body>[\s\S]*?<\/html>/gi, '') +
+        '</div>';
+
+      document.body.appendChild(host);
+      document.body.classList.add('printing-mode');
+
+      function close() {
+        if (host && host.parentNode) host.parentNode.removeChild(host);
+        document.body.classList.remove('printing-mode');
       }
+
+      host.querySelector('[data-tax-action="print"]').addEventListener('click', function () {
+        try { window.print(); } catch (e) {}
+      });
+      host.querySelector('[data-tax-action="close"]').addEventListener('click', close);
     });
   }
 

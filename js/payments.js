@@ -490,15 +490,19 @@
     var el = appEl();
     if (!el) { return; }
 
-    var visible = applyScopeFilter(applySort(applyFilter(allPayments)));
-    var summary = monthSummary(allPayments);
+    var scopedPayments = (window.Properties && window.Properties.filter)
+      ? window.Properties.filter(allPayments)
+      : allPayments;
+
+    var visible = applyScopeFilter(applySort(applyFilter(scopedPayments)));
+    var summary = monthSummary(scopedPayments);
 
     var body = visible.length === 0
-      ? emptyHtml(allPayments.length > 0)
+      ? emptyHtml(scopedPayments.length > 0)
       : visible.map(paymentCardHtml).join('');
 
     var subInspectorHtml = (window.ValuePack && window.ValuePack.renderSubscriptionInspectorHtml)
-      ? window.ValuePack.renderSubscriptionInspectorHtml(allPayments)
+      ? window.ValuePack.renderSubscriptionInspectorHtml(scopedPayments)
       : '';
 
     el.innerHTML = '' +
@@ -888,6 +892,10 @@
        служебными полями. */
     if (window.Family && window.Family.stampScope) {
       window.Family.stampScope(data, STORE, Boolean(editingId));
+    }
+
+    if (window.Properties && window.Properties.stamp) {
+      window.Properties.stamp(data);
     }
 
     var operation = editingId

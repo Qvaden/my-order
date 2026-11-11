@@ -910,6 +910,15 @@
     // Обновляем активный пункт навигации
     updateNav(sectionName);
 
+    // Закрываем висящие оверлеи при смене раздела (кроме защитного PIN)
+    var danglingOverlays = document.querySelectorAll('.modal-overlay:not(#security-pin-modal)');
+    for (var m = 0; m < danglingOverlays.length; m++) {
+      if (danglingOverlays[m].parentNode) {
+        danglingOverlays[m].parentNode.removeChild(danglingOverlays[m]);
+      }
+    }
+    document.body.classList.remove('modal-open');
+
     if (!appEl) { return; }
 
     // Главный экран — реальная сводка из DB
