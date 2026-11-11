@@ -63,6 +63,17 @@
       }
     } catch (e) {}
 
+    // Мгновенно обновляем кнопку-селектор в шапке
+    var pill = document.querySelector('.property-pill');
+    if (pill) {
+      var act = getActive();
+      var iconEl = pill.querySelector('.property-pill__icon');
+      var titleEl = pill.querySelector('.property-pill__title');
+      if (iconEl) iconEl.textContent = act.icon;
+      if (titleEl) titleEl.textContent = act.title;
+      pill.setAttribute('aria-label', 'Объект: ' + act.title + '. Нажмите для смены адреса');
+    }
+
     // Мгновенное обновление текущего экрана
     if (window.App && window.App.getCurrentRoute) {
       var route = window.App.getCurrentRoute();
@@ -118,6 +129,12 @@
    * Модальное окно выбора/добавления недвижимости.
    */
   function openMenu() {
+    var existing = document.getElementById('property-modal');
+    if (existing) {
+      if (existing.parentNode) existing.parentNode.removeChild(existing);
+      return;
+    }
+
     var list = getList();
     var activeId = getActiveId();
     var hasPro = isPro();
@@ -138,41 +155,53 @@
       '</button>';
     }).join('');
 
-    var modalHtml = '<div class="modal-overlay" id="property-modal">' +
-      '<div class="modal-card modal-card--glass" role="dialog" aria-modal="true" style="max-width:380px;">' +
-        '<div class="modal-header">' +
-          '<h3 class="modal-title">🏠 Мои объекты</h3>' +
-          '<button type="button" class="modal-close" data-action="close" aria-label="Закрыть">&times;</button>' +
-        '</div>' +
-        '<div class="modal-body">' +
-          '<p class="modal-desc" style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">' +
-            'Переключайтесь между квартирой, дачей и родительским домом для раздельного учёта.' +
-          '</p>' +
-          '<div class="property-menu-list">' + itemsHtml + '</div>' +
-          '<div class="property-menu-footer" style="margin-top:16px;">' +
-            '<button type="button" class="btn btn--secondary w-full" data-property-action="add-new">' +
-              '<span>➕ Добавить объект</span>' +
-              (hasPro ? '' : ' <span class="pro-badge">PRO</span>') +
-            '</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'property-modal';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
 
-    var div = document.createElement('div');
-    div.innerHTML = modalHtml;
-    var modal = div.firstElementChild;
-    document.body.appendChild(modal);
+    var card = document.createElement('div');
+    card.className = 'modal-content';
+    card.style.maxWidth = '380px';
+    card.innerHTML = '' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">' +
+        '<h3 class="modal-content__title" style="margin:0;">🏠 Мои объекты</h3>' +
+        '<button type="button" class="icon-btn" data-action="close" aria-label="Закрыть" style="min-width:36px;min-height:36px;font-size:20px;line-height:1;">&times;</button>' +
+      '</div>' +
+      '<p class="modal-content__text" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:var(--space-4);">' +
+        'Переключайтесь между объектами для раздельного учёта платежей, счётчиков и дел.' +
+      '</p>' +
+      '<div class="property-menu-list">' + itemsHtml + '</div>' +
+      '<div style="margin-top:var(--space-4);">' +
+        '<button type="button" class="btn btn--secondary w-full" data-property-action="add-new">' +
+          '<span>➕ Добавить объект</span>' +
+          (hasPro ? '' : ' <span class="pro-badge">PRO</span>') +
+        '</button>' +
+      '</div>';
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    document.body.classList.add('modal-open');
+
+    requestAnimationFrame(function () {
+      overlay.classList.add('is-open');
+    });
 
     function close() {
-      modal.classList.add('modal-overlay--closing');
+      if (overlay._closing) return;
+      overlay._closing = true;
+      overlay.classList.remove('is-open');
       setTimeout(function () {
-        if (modal.parentNode) modal.parentNode.removeChild(modal);
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        if (!document.querySelector('.modal-overlay')) {
+          document.body.classList.remove('modal-open');
+        }
       }, 200);
     }
 
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal || e.target.closest('[data-action="close"]')) {
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay || e.target.closest('[data-action="close"]')) {
         close();
         return;
       }

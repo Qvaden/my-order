@@ -1072,8 +1072,23 @@ body.modal-open {
 }
 
 .icon-btn:hover {
+  background: var(--tint-primary);
+  color: var(--color-primary);
+}
+
+.icon-btn--danger:hover,
+.icon-btn[data-action="delete"]:hover {
   background: var(--tint-error);
   color: var(--color-error);
+}
+
+.icon-btn[data-action="gost-qr"] {
+  color: var(--color-primary);
+}
+
+.icon-btn[data-action="gost-qr"]:hover {
+  background: var(--tint-primary);
+  color: var(--color-primary-strong, #1d4ed8);
 }
 
 /* ---- 6g. Summary card (сводка за месяц) ---- */

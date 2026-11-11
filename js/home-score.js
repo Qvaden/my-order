@@ -208,42 +208,54 @@
         '</div>';
       }).join('');
 
-      var html = '<div class="modal-overlay" id="achievements-modal">' +
-        '<div class="modal-card modal-card--glass" role="dialog" aria-modal="true" style="max-width:440px;">' +
-          '<div class="modal-header">' +
-            '<h3 class="modal-title">' + data.rankIcon + ' Индекс порядка: ' + data.score + '%</h3>' +
-            '<button type="button" class="modal-close" data-action="close" aria-label="Закрыть">&times;</button>' +
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.id = 'achievements-modal';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+
+      var card = document.createElement('div');
+      card.className = 'modal-content';
+      card.style.maxWidth = '440px';
+      card.innerHTML = '' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">' +
+          '<h3 class="modal-content__title" style="margin:0;">' + data.rankIcon + ' Индекс: ' + data.score + '%</h3>' +
+          '<button type="button" class="icon-btn" data-action="close" aria-label="Закрыть" style="min-width:36px;min-height:36px;font-size:20px;line-height:1;">&times;</button>' +
+        '</div>' +
+        '<div class="achievement-hero">' +
+          '<div class="achievement-hero__ring">' +
+            '<span class="achievement-hero__val">' + data.score + '%</span>' +
           '</div>' +
-          '<div class="modal-body">' +
-            '<div class="achievement-hero">' +
-              '<div class="achievement-hero__ring">' +
-                '<span class="achievement-hero__val">' + data.score + '%</span>' +
-              '</div>' +
-              '<div class="achievement-hero__info">' +
-                '<strong>' + data.rank + '</strong>' +
-                '<small>Серия образцового дома: ' + data.streakMonths + ' месяц подряд 🔥</small>' +
-              '</div>' +
-            '</div>' +
-            '<h4 style="font-size:13px;font-weight:700;margin:16px 0 10px 0;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;">Коллекция наград</h4>' +
-            '<div class="achievement-list">' + listHtml + '</div>' +
+          '<div class="achievement-hero__info">' +
+            '<strong>' + data.rank + '</strong>' +
+            '<small>Серия образцового дома: ' + data.streakMonths + ' мес. подряд 🔥</small>' +
           '</div>' +
         '</div>' +
-      '</div>';
+        '<h4 style="font-size:12px;font-weight:700;margin:16px 0 10px 0;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.05em;">Коллекция наград</h4>' +
+        '<div class="achievement-list">' + listHtml + '</div>';
 
-      var div = document.createElement('div');
-      div.innerHTML = html;
-      var modal = div.firstElementChild;
-      document.body.appendChild(modal);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+      document.body.classList.add('modal-open');
+
+      requestAnimationFrame(function () {
+        overlay.classList.add('is-open');
+      });
 
       function closeModal() {
-        modal.classList.add('modal-overlay--closing');
+        if (overlay._closing) return;
+        overlay._closing = true;
+        overlay.classList.remove('is-open');
         setTimeout(function () {
-          if (modal.parentNode) modal.parentNode.removeChild(modal);
+          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+          if (!document.querySelector('.modal-overlay')) {
+            document.body.classList.remove('modal-open');
+          }
         }, 200);
       }
 
-      modal.addEventListener('click', function (e) {
-        if (e.target === modal || e.target.closest('[data-action="close"]')) {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay || e.target.closest('[data-action="close"]')) {
           closeModal();
         }
       });

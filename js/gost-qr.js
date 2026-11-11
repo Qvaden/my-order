@@ -130,11 +130,24 @@
       content.innerHTML = modalHtml;
       overlay.appendChild(content);
       document.body.appendChild(overlay);
+      document.body.classList.add('modal-open');
+
+      requestAnimationFrame(function () {
+        overlay.classList.add('is-open');
+      });
 
       function close() {
-        if (overlay && overlay.parentNode) {
-          overlay.parentNode.removeChild(overlay);
-        }
+        if (overlay._closing) return;
+        overlay._closing = true;
+        overlay.classList.remove('is-open');
+        setTimeout(function () {
+          if (overlay && overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+          }
+          if (!document.querySelector('.modal-overlay')) {
+            document.body.classList.remove('modal-open');
+          }
+        }, 200);
       }
 
       overlay.addEventListener('click', function (e) {
