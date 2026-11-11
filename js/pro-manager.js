@@ -121,9 +121,26 @@
 
   /**
    * Текущий тариф: 'free' | 'pro'.
-   * Инициализируется СИНХРОННО из localStorage.
+   * Инициализируется СИНХРОННО из URL launch params или localStorage.
    */
   var tier = (function () {
+    var launchId = null;
+    try {
+      if (window.VK && window.VK.userId) {
+        launchId = window.VK.userId();
+      }
+      if (!launchId) {
+        var p = new URLSearchParams(window.location.search);
+        launchId = p.get('vk_user_id');
+      }
+    } catch (e) {}
+
+    if (launchId && isOwnerOrVip(launchId)) {
+      var plan = getTargetPlanForUser(launchId);
+      writeCache('pro', Date.now(), { plan: plan, ownerGrant: true });
+      return 'pro';
+    }
+
     var cached = readCache();
     return cached && cached.tier === 'pro' ? 'pro' : 'free';
   })();
@@ -228,9 +245,14 @@
   function isOwner() {
     try {
       if (localStorage.getItem(OWNER_UNLOCK_KEY) === '1') { return true; }
-      var vkUser = window.VK && window.VK.user && window.VK.user();
-      if (vkUser && String(vkUser.id) === OWNER_VK_ID) { return true; }
-      if (vkUser && vkUser.id && isVipVkId(vkUser.id)) { return true; }
+      var uid = (window.VK && window.VK.userId && window.VK.userId()) ||
+                (window.VK && window.VK.user && window.VK.user() && window.VK.user().id);
+      if (!uid) {
+        var p = new URLSearchParams(window.location.search);
+        uid = p.get('vk_user_id');
+      }
+      if (uid && String(uid).trim() === OWNER_VK_ID) { return true; }
+      if (uid && isVipVkId(uid)) { return true; }
     } catch (e) {}
     return false;
   }
@@ -353,10 +375,57 @@
     try {
       var raw = localStorage.getItem(VIP_VK_IDS_KEY);
       var parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.map(String) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(function (item) {
+        return typeof item === 'object' && item && item.vkId ? String(item.vkId) : String(item);
+      });
     } catch (e) {
       return [];
     }
+  }
+
+  /**
+   * Возвращает полный список записей VIP { vkId, plan, grantedAt }.
+   * @returns {Array<{vkId: string, plan: string, grantedAt: number}>}
+   */
+  function getVipEntries() {
+    try {
+      var raw = localStorage.getItem(VIP_VK_IDS_KEY);
+      var parsed = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(function (item) {
+        if (typeof item === 'object' && item && item.vkId) {
+          return {
+            vkId: String(item.vkId),
+            plan: item.plan || 'lifetime',
+            grantedAt: item.grantedAt || Date.now()
+          };
+        }
+        return {
+          vkId: String(item),
+          plan: 'lifetime',
+          grantedAt: Date.now()
+        };
+      });
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /**
+   * Возвращает тариф, назначенный для данного VIP VK ID.
+   * @param {string|number} vkId
+   * @returns {string} 'lifetime' | 'year' | 'month'
+   */
+  function getVipPlan(vkId) {
+    var clean = String(vkId || '').trim();
+    var entries = getVipEntries();
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].vkId === clean) {
+        return entries[i].plan || 'lifetime';
+      }
+    }
+    return 'lifetime';
   }
 
   /**
@@ -370,25 +439,77 @@
   }
 
   /**
-   * Добавляет VK ID в VIP-список и сразу активирует PRO, если это текущий пользователь.
+   * Проверяет, является ли пользователь владельцем или VIP.
    * @param {string|number} vkId
-   * @returns {{ok: boolean, list: Array<string>, message: string}}
+   * @returns {boolean}
    */
-  function addVipVkId(vkId) {
+  function isOwnerOrVip(vkId) {
+    if (!vkId) return false;
+    var s = String(vkId).trim();
+    return s === OWNER_VK_ID || isVipVkId(s);
+  }
+
+  /**
+   * Возвращает целевой тариф для пользователя.
+   * @param {string|number} vkId
+   * @returns {string}
+   */
+  function getTargetPlanForUser(vkId) {
+    if (!vkId) return 'lifetime';
+    var s = String(vkId).trim();
+    if (s === OWNER_VK_ID) return 'lifetime';
+    return getVipPlan(s) || 'lifetime';
+  }
+
+  /**
+   * Добавляет VK ID в VIP-список с выбранным тарифом.
+   * @param {string|number} vkId
+   * @param {string} [planId] — 'lifetime' | 'year' | 'month'
+   * @returns {{ok: boolean, list: Array<string>, entries: Array<Object>, message: string}}
+   */
+  function addVipVkId(vkId, planId) {
     var clean = String(vkId || '').replace(/\D/g, '');
     if (!clean) {
-      return { ok: false, list: getVipVkIds(), message: 'Введите цифровой VK ID (например: 12345678).' };
+      return { ok: false, list: getVipVkIds(), entries: getVipEntries(), message: 'Введите цифровой VK ID (например: 12345678).' };
     }
-    var list = getVipVkIds();
-    if (list.indexOf(clean) === -1) {
-      list.push(clean);
-      try { localStorage.setItem(VIP_VK_IDS_KEY, JSON.stringify(list)); } catch (e) {}
+    var chosenPlan = PLANS[planId] ? planId : 'lifetime';
+    var entries = getVipEntries();
+    var found = false;
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].vkId === clean) {
+        entries[i].plan = chosenPlan;
+        entries[i].grantedAt = Date.now();
+        found = true;
+        break;
+      }
     }
-    var vkUser = window.VK && window.VK.user && window.VK.user();
-    if (vkUser && String(vkUser.id) === clean) {
-      setOwnerPro('pro', 'lifetime');
+    if (!found) {
+      entries.push({ vkId: clean, plan: chosenPlan, grantedAt: Date.now() });
     }
-    return { ok: true, list: list, message: 'VK ID ' + clean + ' добавлен в список PRO.' };
+    try {
+      localStorage.setItem(VIP_VK_IDS_KEY, JSON.stringify(entries));
+    } catch (e) {}
+
+    // Если выдан текущему пользователю на этом устройстве, сразу применяем
+    var myUid = (window.VK && window.VK.userId && window.VK.userId()) ||
+                (window.VK && window.VK.user && window.VK.user() && window.VK.user().id);
+    if (!myUid) {
+      try {
+        var p = new URLSearchParams(window.location.search);
+        myUid = p.get('vk_user_id');
+      } catch (e) {}
+    }
+    if (myUid && String(myUid).trim() === clean) {
+      setOwnerPro('pro', chosenPlan);
+    }
+
+    var planTitle = PLANS[chosenPlan] ? PLANS[chosenPlan].title : chosenPlan;
+    return {
+      ok: true,
+      list: getVipVkIds(),
+      entries: entries,
+      message: 'VK ID ' + clean + ' добавлен в PRO (' + planTitle + ').'
+    };
   }
 
   /**
@@ -398,9 +519,11 @@
    */
   function removeVipVkId(vkId) {
     var clean = String(vkId || '').trim();
-    var list = getVipVkIds().filter(function (id) { return id !== clean; });
-    try { localStorage.setItem(VIP_VK_IDS_KEY, JSON.stringify(list)); } catch (e) {}
-    return list;
+    var entries = getVipEntries().filter(function (entry) { return entry.vkId !== clean; });
+    try {
+      localStorage.setItem(VIP_VK_IDS_KEY, JSON.stringify(entries));
+    } catch (e) {}
+    return getVipVkIds();
   }
 
   /** @returns {Array<Object>} список всех промокодов (дефолтные + созданные владельцем) */
@@ -591,10 +714,19 @@
    * @returns {Promise<boolean>} true, если PRO активен
    */
   function checkSubscriptionStatus() {
-    var vkUser = window.VK && window.VK.user && window.VK.user();
-    if (vkUser && (String(vkUser.id) === OWNER_VK_ID || isVipVkId(vkUser.id))) {
-      writeCache('pro', Date.now(), { plan: 'lifetime', ownerGrant: true });
+    var uid = (window.VK && window.VK.userId && window.VK.userId()) ||
+              (window.VK && window.VK.user && window.VK.user() && window.VK.user().id);
+    if (!uid) {
+      try {
+        var p = new URLSearchParams(window.location.search);
+        uid = p.get('vk_user_id');
+      } catch (e) {}
+    }
+    if (uid && isOwnerOrVip(uid)) {
+      var plan = getTargetPlanForUser(uid);
+      writeCache('pro', Date.now(), { plan: plan, ownerGrant: true });
       tier = 'pro';
+      applyProState();
       return Promise.resolve(true);
     }
     var cached = readCache();
@@ -797,6 +929,16 @@
         activateModules(true);
       }
     });
+
+    window.addEventListener('vk:user', function (evt) {
+      var u = evt && evt.detail;
+      var uid = u && u.id;
+      if (uid && isOwnerOrVip(uid)) {
+        var plan = getTargetPlanForUser(uid);
+        writeCache('pro', Date.now(), { plan: plan, ownerGrant: true });
+        setTier('pro', { plan: plan, ownerGrant: true });
+      }
+    });
   }
 
   if (document.readyState === 'loading') {
@@ -831,6 +973,9 @@
     lockOwner: lockOwner,
     setOwnerPro: setOwnerPro,
     getVipVkIds: getVipVkIds,
+    getVipEntries: getVipEntries,
+    getVipPlan: getVipPlan,
+    isVipVkId: isVipVkId,
     addVipVkId: addVipVkId,
     removeVipVkId: removeVipVkId,
     redeemPromoCode: redeemPromoCode,

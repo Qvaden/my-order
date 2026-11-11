@@ -2545,20 +2545,21 @@
 
     var currentPro = pm.isPro();
     var activePlan = pm.getActivePlan();
-    var vipIds = pm.getVipVkIds();
+    var vipEntries = pm.getVipEntries ? pm.getVipEntries() : [];
     var vkUser = window.VK && window.VK.user && window.VK.user();
-    var myVkId = vkUser && vkUser.id ? String(vkUser.id) : '';
+    var myVkId = (window.VK && window.VK.userId && window.VK.userId()) || (vkUser && vkUser.id ? String(vkUser.id) : '');
     var currentModeKey = !currentPro ? 'free' : (activePlan && activePlan.id ? activePlan.id : 'lifetime');
 
-    var vipListHtml = vipIds.length
-      ? vipIds.map(function (id) {
+    var vipListHtml = vipEntries.length
+      ? vipEntries.map(function (entry) {
+          var planName = entry.plan === 'lifetime' ? 'Навсегда' : (entry.plan === 'year' ? '1 год' : '1 месяц');
           return '<span class="owner-vip-chip">' +
             '<span class="owner-vip-chip__dot"></span>' +
-            '<span>VK ID ' + esc(id) + '</span>' +
-            '<button type="button" class="owner-vip-chip__del" data-owner-del-vip="' + esc(id) + '" aria-label="Удалить ID">×</button>' +
+            '<span>VK ID ' + esc(entry.vkId) + ' <small style="opacity:0.85;font-weight:600;">· ' + esc(planName) + '</small></span>' +
+            '<button type="button" class="owner-vip-chip__del" data-owner-del-vip="' + esc(entry.vkId) + '" aria-label="Удалить ID">×</button>' +
           '</span>';
         }).join('')
-      : '<div class="exec-empty-vip">Пока нет добавленных VK ID — добавьте свой или ID близких</div>';
+      : '<div class="exec-empty-vip">Пока нет выданных VIP ID</div>';
 
     var tierModes = [
       { key: 'lifetime', title: 'PRO Навсегда', sub: 'Вечный VIP-доступ', badge: 'VIP' },
@@ -2580,11 +2581,39 @@
           '</span>' +
         '</div>' +
         '<h2 class="exec-owner-hero__title">Управление подписками</h2>' +
-        '<p class="exec-owner-hero__desc">Мгновенное переключение вашего тарифа, выдача вечного PRO по VK ID и генератор гибких промокодов.</p>' +
+        '<p class="exec-owner-hero__desc">Выдача PRO по VK ID с выбором тарифа, проверка тарифов на этом устройстве и генератор промокодов.</p>' +
       '</div>' +
 
       '<div class="exec-section-card">' +
-        '<div class="exec-section-card__title">Тариф на этом устройстве</div>' +
+        '<div class="exec-section-card__title">Выдать PRO по VK ID</div>' +
+        '<p class="exec-field-hint" style="margin-bottom:12px;">Выберите тариф, введите VK ID человека и нажмите «Выдать PRO». Тариф на вашем устройстве не изменится.</p>' +
+        '<div class="form-group" style="margin-bottom:10px;">' +
+          '<label class="exec-field-label">Тариф для выдачи</label>' +
+          '<div class="exec-select-wrap">' +
+            '<select class="exec-select" data-owner-input="vip-plan">' +
+              '<option value="lifetime" selected>PRO Навсегда (VIP · Разовый)</option>' +
+              '<option value="year">PRO на 1 год (890 ₽)</option>' +
+              '<option value="month">PRO на 1 месяц (99 ₽)</option>' +
+            '</select>' +
+            '<span class="exec-select-arrow" aria-hidden="true">' +
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>' +
+            '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-group" style="margin-bottom:12px;">' +
+          '<label class="exec-field-label">VK ID пользователя</label>' +
+          '<div class="exec-vip-form">' +
+            '<input type="text" inputmode="numeric" class="exec-vip-input" data-owner-input="vkid" placeholder="Например: 12345678">' +
+            '<button type="button" class="exec-vip-add-btn" data-owner-action="add-vip">+ Выдать PRO</button>' +
+          '</div>' +
+        '</div>' +
+        '<label class="exec-field-label" style="margin-bottom:6px;">Активные VIP-пользователи (' + vipEntries.length + ')</label>' +
+        '<div class="owner-vip-list" data-owner-vip-list>' + vipListHtml + '</div>' +
+      '</div>' +
+
+      '<div class="exec-section-card">' +
+        '<div class="exec-section-card__title">Тестирование тарифов на этом устройстве</div>' +
+        '<p class="exec-field-hint" style="margin-bottom:10px;">Переключает тариф только на вашем экране — удобно для проверки Free-версии и дизайна с разными планами.</p>' +
         '<div class="exec-tier-grid">' +
           tierModes.map(function (m) {
             var isAct = currentModeKey === m.key;
@@ -2598,15 +2627,6 @@
             '</button>';
           }).join('') +
         '</div>' +
-      '</div>' +
-
-      '<div class="exec-section-card">' +
-        '<div class="exec-section-card__title">Белый список VK ID (автоматический PRO)</div>' +
-        '<div class="exec-vip-form">' +
-          '<input type="text" inputmode="numeric" class="exec-vip-input" data-owner-input="vkid" placeholder="Введите VK ID" value="' + esc(myVkId) + '">' +
-          '<button type="button" class="exec-vip-add-btn" data-owner-action="add-vip">+ Выдать PRO</button>' +
-        '</div>' +
-        '<div class="owner-vip-list" data-owner-vip-list>' + vipListHtml + '</div>' +
       '</div>' +
 
       '<div class="exec-section-card">' +
@@ -2701,9 +2721,11 @@
 
       var addVipBtn = card.querySelector('[data-owner-action="add-vip"]');
       var vkInput = card.querySelector('[data-owner-input="vkid"]');
+      var vipPlanSelect = card.querySelector('[data-owner-input="vip-plan"]');
       if (addVipBtn && vkInput) {
         addVipBtn.addEventListener('click', function () {
-          var res = pm.addVipVkId(vkInput.value);
+          var targetPlan = vipPlanSelect ? vipPlanSelect.value : 'lifetime';
+          var res = pm.addVipVkId(vkInput.value, targetPlan);
           statusEl.textContent = res.message;
           statusEl.className = 'backup-status backup-status--' + (res.ok ? 'ok' : 'error');
           if (res.ok) {

@@ -1710,25 +1710,32 @@ body.modal-open {
    Все правила переопределяют базовые за счёт порядка в файле.
    ----------------------------------------------------------- */
 
-/* ---- 1. FAB — кнопка «+» ---- */
+/* ---- 1. Кнопка «+» в заголовках разделов ---- */
 .header-actions {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
 }
 
 button.btn--icon {
-  position: fixed;
-  top: calc(var(--space-6) + env(safe-area-inset-top, 0px));
-  right: var(--space-6);
-  z-index: 100;
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  min-height: 56px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
   padding: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
   color: var(--color-on-primary);
   box-shadow: var(--shadow-fab);
+  flex-shrink: 0;
   transition:
     transform 0.2s var(--easing-standard),
     box-shadow 0.2s var(--easing-standard);

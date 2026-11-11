@@ -50,6 +50,15 @@
    */
   function detectEnv() {
     bridge = window.vkBridge || null;
+    try {
+      var p = new URLSearchParams(window.location.search);
+      if (p.has('vk_app_id') || p.has('vk_user_id')) {
+        if (bridge && typeof bridge.isWebView === 'function' && bridge.isWebView()) {
+          return 'vk-native';
+        }
+        return 'vk-web';
+      }
+    } catch (e) {}
     if (!bridge || typeof bridge.send !== 'function') {
       return 'browser';
     }
@@ -117,6 +126,30 @@
     } catch (e) {
       return null;
     }
+  }
+
+  /**
+   * Читает цифровой ID пользователя из URL-параметров запуска vk_user_id.
+   * Доступен СИНХРОННО с первого кадра без ожидания VKWebAppGetUserInfo.
+   * @returns {string|null}
+   */
+  function userIdFromLaunchParams() {
+    try {
+      var p = new URLSearchParams(window.location.search);
+      var uid = p.get('vk_user_id');
+      if (uid && /^\d+$/.test(uid)) {
+        return String(uid);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Если запущены в VK с vk_user_id, создаём базовый объект пользователя сразу
+  var launchId = userIdFromLaunchParams();
+  if (launchId) {
+    vkUser = { id: Number(launchId) || launchId, first_name: '', last_name: '', _fromLaunchParams: true };
   }
 
   /* ================================================================
@@ -193,12 +226,13 @@
    * @returns {Promise<?Object>}
    */
   function loadUser() {
-    if (!isVK() || !bridge) { return Promise.resolve(null); }
+    if (!isVK() || !bridge) { return Promise.resolve(vkUser); }
     return Promise.resolve()
       .then(function () { return bridge.send('VKWebAppGetUserInfo'); })
       .then(function (user) {
-        vkUser = user || null;
-        if (vkUser) {
+        if (user) {
+          vkUser = Object.assign({}, vkUser || {}, user);
+          delete vkUser._fromLaunchParams;
           window.dispatchEvent(new CustomEvent('vk:user', { detail: vkUser }));
         }
         return vkUser;
@@ -206,7 +240,7 @@
       .catch(function (err) {
         // Гостевой режим: тихо, без console.error (консоль должна быть чистой)
         console.info('[VK] Профиль недоступен, работаем гостем:', err && err.error_type || err);
-        return null;
+        return vkUser;
       });
   }
 
@@ -405,6 +439,11 @@
     lang: function () { return currentLang; },
     /** @returns {?Object} профиль из VK или null (гость) */
     user: function () { return vkUser; },
+    /** @returns {string|null} цифровой VK ID (из userInfo или launchParams) */
+    userId: function () {
+      if (vkUser && vkUser.id) { return String(vkUser.id); }
+      return userIdFromLaunchParams();
+    },
     /** @returns {string} имя для приветствия ('' если гость) */
     firstName: function () { return vkUser && vkUser.first_name ? String(vkUser.first_name) : ''; },
     /** @returns {Promise<?Object>} перечитать профиль */
