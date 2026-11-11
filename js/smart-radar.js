@@ -137,26 +137,26 @@
       return window.DB.getAll('meters').then(function (meters) {
         var found = null;
         for (var i = 0; i < meters.length; i++) {
-          if (meters[i].type === parsed.data.type || meters[i].title.toLowerCase().indexOf(parsed.data.title.toLowerCase()) !== -1) {
+          if (meters[i].type === parsed.data.type || (meters[i].title && meters[i].title.toLowerCase().indexOf(parsed.data.title.toLowerCase()) !== -1)) {
             found = meters[i];
             break;
           }
         }
-        var meterId = found ? found.id : ('m_' + Date.now());
-        var p = found ? Promise.resolve(found) : window.DB.add('meters', {
-          id: meterId,
-          type: parsed.data.type,
-          title: parsed.data.title,
-          unit: parsed.data.type === 'electricity' ? 'кВт·ч' : 'м³'
-        });
 
-        return p.then(function () {
+        var p = found
+          ? Promise.resolve(found.id)
+          : window.DB.add('meters', {
+              type: parsed.data.type,
+              title: parsed.data.title,
+              unit: parsed.data.type === 'electricity' ? 'кВт·ч' : 'м³'
+            });
+
+        return p.then(function (mRes) {
+          var mid = (typeof mRes === 'object' && mRes !== null) ? mRes.id : mRes;
           return window.DB.add('meter_readings', {
-            id: 'mr_' + Date.now(),
-            meterId: meterId,
+            meterId: Number(mid),
             value: parsed.data.value,
-            date: new Date().toISOString().slice(0, 10),
-            createdAt: Date.now()
+            date: new Date().toISOString().slice(0, 10)
           });
         });
       });
@@ -164,9 +164,13 @@
 
     if (parsed.type === 'payment') {
       var item = Object.assign({
-        id: 'p_' + Date.now(),
-        createdAt: Date.now()
+        title: parsed.data.title || 'Платёж',
+        amount: parsed.data.amount || 0,
+        date: parsed.data.date || new Date().toISOString().slice(0, 10),
+        category: parsed.data.category || 'Прочее',
+        status: 'pending'
       }, parsed.data);
+      delete item.id;
       if (window.VK && window.VK.firstName) {
         item.authorName = window.VK.firstName();
       }
@@ -175,9 +179,11 @@
 
     if (parsed.type === 'task') {
       var taskItem = Object.assign({
-        id: 't_' + Date.now(),
-        createdAt: Date.now()
+        title: parsed.data.title || 'Новое дело',
+        priority: parsed.data.priority || 'medium',
+        completed: false
       }, parsed.data);
+      delete taskItem.id;
       if (window.VK && window.VK.firstName) {
         taskItem.authorName = window.VK.firstName();
       }
@@ -193,58 +199,93 @@
 
   function renderQuickAddBar() {
     return '' +
-      '<div class="quick-add-box" id="quick-add-box">' +
+      '<div class="quick-add-box" data-quick-box="true">' +
         '<span class="quick-add-box__icon" aria-hidden="true">⚡</span>' +
-        '<input type="text" class="quick-add-box__input" id="quick-add-input" ' +
+        '<input type="text" class="quick-add-box__input" data-quick-input="true" ' +
           'placeholder="Умная строка: «Свет 340», «Интернет 650 до 25» или дело..." ' +
           'aria-label="Умная строка быстрого добавления">' +
-        '<button type="button" class="quick-add-box__btn" id="quick-add-btn">Добавить</button>' +
+        '<button type="button" class="quick-add-box__btn" data-quick-btn="true">Добавить</button>' +
       '</div>' +
-      '<div id="quick-add-preview-wrap" style="display:none;"></div>';
+      '<div class="quick-add-preview-wrap" data-quick-preview="true" style="display:none;"></div>';
   }
 
+  var eventsBound = false;
+
   function bindQuickAddEvents() {
-    var input = document.getElementById('quick-add-input');
-    var btn = document.getElementById('quick-add-btn');
-    var previewWrap = document.getElementById('quick-add-preview-wrap');
-    if (!input || !btn) return;
+    if (eventsBound) return;
+    eventsBound = true;
 
-    var currentParsed = null;
+    // Глобальная делегация ввода для всех умных строк
+    document.addEventListener('input', function (e) {
+      var input = e.target;
+      if (!input || !input.hasAttribute('data-quick-input')) return;
 
-    input.addEventListener('input', function () {
+      var box = input.closest('[data-quick-box]');
+      var previewWrap = box ? box.nextElementSibling : null;
+      if (!previewWrap || !previewWrap.hasAttribute('data-quick-preview')) {
+        previewWrap = document.querySelector('[data-quick-preview]');
+      }
+
       var val = input.value.trim();
       if (!val) {
         if (previewWrap) {
           previewWrap.style.display = 'none';
           previewWrap.innerHTML = '';
         }
-        currentParsed = null;
         return;
       }
 
-      currentParsed = parseQuickInput(val);
-      if (currentParsed && previewWrap) {
+      var parsed = parseQuickInput(val);
+      if (parsed && previewWrap) {
         previewWrap.style.display = 'block';
         previewWrap.innerHTML = '<div class="quick-add-preview">' +
-          '<span>✨ ' + currentParsed.previewText + '</span>' +
+          '<span>✨ ' + parsed.previewText + '</span>' +
           '<small style="color:var(--text-secondary);">' + (isPro() ? 'PRO' : 'Тест') + '</small>' +
           '</div>';
       }
-    });
+    }, true);
 
-    btn.addEventListener('click', function () {
+    // Обработка кнопки «Добавить»
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-quick-btn]');
+      if (!btn) return;
+
+      var box = btn.closest('[data-quick-box]');
+      if (!box) return;
+
+      var input = box.querySelector('[data-quick-input]');
+      if (!input) return;
+
       var val = input.value.trim();
-      if (!val) return;
+      if (!val) {
+        // Если поле пустое — в разделе дел открываем форму добавления, либо фокусируем поле
+        var isTasks = window.App && window.App.getCurrentRoute && window.App.getCurrentRoute() === 'tasks';
+        if (isTasks && window.Tasks && window.Tasks.openAddForm) {
+          window.Tasks.openAddForm();
+        } else {
+          input.focus();
+          if (window.VK && window.VK.notify) {
+            window.VK.notify('Напишите текст дела, счёта или показания', 'info');
+          }
+        }
+        return;
+      }
 
-      var parsed = currentParsed || parseQuickInput(val);
+      var parsed = parseQuickInput(val);
       if (!parsed) return;
+
+      btn.disabled = true;
 
       executeQuickAdd(parsed).then(function () {
         input.value = '';
-        if (previewWrap) {
+        btn.disabled = false;
+
+        var previewWrap = box.nextElementSibling;
+        if (previewWrap && previewWrap.hasAttribute('data-quick-preview')) {
           previewWrap.style.display = 'none';
           previewWrap.innerHTML = '';
         }
+
         try {
           if (window.VK && window.VK.taptic) {
             window.VK.taptic('notification', 'success');
@@ -252,24 +293,42 @@
           if (window.MicroFX && window.MicroFX.burst) {
             window.MicroFX.burst(btn);
           }
-        } catch (e) {}
+        } catch (err) {}
 
-        if (window.App && window.App.refreshCurrent) {
-          window.App.refreshCurrent();
-        } else {
-          location.reload();
+        if (window.Tasks && window.Tasks.invalidate && window.Tasks.render) {
+          window.Tasks.invalidate();
+          window.Tasks.render();
+        }
+        if (window.Payments && window.Payments.invalidate) {
+          window.Payments.invalidate();
+        }
+        if (window.App && window.App.getCurrentRoute && window.App.getCurrentRoute() === 'home') {
+          window.App.renderSection('home');
+        }
+        if (window.VK && window.VK.notify) {
+          window.VK.notify('✨ ' + (parsed.type === 'task' ? 'Дело создано' : (parsed.type === 'payment' ? 'Платёж добавлен' : 'Показание внесено')), 'success');
         }
       }).catch(function (err) {
+        btn.disabled = false;
         alert('Не удалось сохранить: ' + err.message);
       });
-    });
+    }, true);
 
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        btn.click();
-      }
-    });
+    // Нажатие Enter в инпуте
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var input = e.target;
+      if (!input || !input.hasAttribute('data-quick-input')) return;
+
+      var box = input.closest('[data-quick-box]');
+      if (!box) return;
+      var btn = box.querySelector('[data-quick-btn]');
+      if (btn) btn.click();
+    }, true);
   }
+
+  // Привязываем слушатели сразу
+  bindQuickAddEvents();
 
   /* ================================================================
      3. SMART RADAR INSIGHTS
