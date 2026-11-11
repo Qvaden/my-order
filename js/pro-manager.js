@@ -252,7 +252,6 @@
         uid = p.get('vk_user_id');
       }
       if (uid && String(uid).trim() === OWNER_VK_ID) { return true; }
-      if (uid && isVipVkId(uid)) { return true; }
     } catch (e) {}
     return false;
   }
