@@ -1,0 +1,67 @@
+{
+  "name": "МОЙ ПОРЯДОК",
+  "short_name": "Порядок",
+  "description": "Учёт платежей, счётчиков, документов и задач",
+  "lang": "ru",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
+  "shortcuts": [
+    {
+      "name": "Передать показания",
+      "short_name": "Показания",
+      "description": "Открыть счётчик и ввести новое значение",
+      "url": "./index.html?view=reading",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%23DBEAFE'/%3E%3Ccircle cx='96' cy='96' r='52' fill='none' stroke='%231D4ED8' stroke-width='12'/%3E%3Cpath d='M96 64v32l22 14' stroke='%231D4ED8' stroke-width='12' stroke-linecap='round' fill='none'/%3E%3C/svg%3E",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Добавить платёж",
+      "short_name": "Платёж",
+      "description": "Новая трата или регулярное списание",
+      "url": "./index.html?view=add-payment",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%23DBEAFE'/%3E%3Crect x='40' y='62' width='112' height='76' rx='14' fill='none' stroke='%231D4ED8' stroke-width='12'/%3E%3Cpath d='M40 88h112' stroke='%231D4ED8' stroke-width='12'/%3E%3C/svg%3E",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Экспорт в календарь",
+      "short_name": "Календарь",
+      "description": "Скачать сроки файлом .ics (PRO)",
+      "url": "./index.html?view=calendar",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%23DBEAFE'/%3E%3Crect x='40' y='52' width='112' height='96' rx='14' fill='none' stroke='%231D4ED8' stroke-width='12'/%3E%3Cpath d='M40 84h112M72 40v24M120 40v24' stroke='%231D4ED8' stroke-width='12' stroke-linecap='round'/%3E%3C/svg%3E",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%232563EB'/%3E%3Ctext x='96' y='128' font-family='Arial,sans-serif' font-size='96' font-weight='700' fill='white' text-anchor='middle'%3E%D0%9C%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%232563EB'/%3E%3Ctext x='256' y='342' font-family='Arial,sans-serif' font-size='256' font-weight='700' fill='white' text-anchor='middle'%3E%D0%9C%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

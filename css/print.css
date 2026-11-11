@@ -1,0 +1,316 @@
+/* ============================================================
+   МОЙ ПОРЯДОК — печать и печатные формы (Этап 12.5, PRO)
+   ============================================================
+   Файл подключается ЛЕНИВО (js/pdf-exporter.js → loadPrintCss),
+   а не из index.html: на экране он нужен только в момент печати
+   квитанции/формы, а как render-blocking CSS украл бы FCP и
+   уронил Lighthouse ниже 85.
+
+   Содержимое:
+     1. .print-host — предпросмотр документа на экране (до диалога печати);
+     2. @media print — в печать уходит ТОЛЬКО документ: приложение,
+        навигация, модалки и тосты исчезают;
+     3. @page — поля A4, без полей браузера-заголовка мы бы потеряли край таблицы.
+   ============================================================ */
+
+/* -----------------------------------------------------------
+   1. Предпросмотр на экране
+   ----------------------------------------------------------- */
+.print-host {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 23, 42, 0.72);
+  padding: var(--space-4, 16px);
+  overflow: auto;
+}
+
+.print-host__bar {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-surface, #fff);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.25);
+  margin-bottom: var(--space-4, 16px);
+}
+
+.print-host__hint {
+  flex: 1 1 200px;
+  font-size: var(--fs-xs, 12px);
+  color: var(--color-text-secondary, #64748B);
+  line-height: 1.4;
+}
+
+.print-host__paper {
+  flex: 0 0 auto;
+  width: min(210mm, 100%);
+  margin: 0 auto var(--space-6, 24px);
+  background: #FFFFFF;
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.35);
+  padding: 14mm 12mm;
+  color: #000000;
+}
+
+/* Показываем предпросмотр только пока открыт слой печати */
+body.printing-mode {
+  overflow: hidden;
+}
+
+/* -----------------------------------------------------------
+   2. Квитанция — макет документа
+   ----------------------------------------------------------- */
+.receipt-print {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 11pt;
+  line-height: 1.45;
+  color: #000000;
+  background: transparent;
+}
+
+.receipt-print__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.receipt-print__brand {
+  font-size: 15pt;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.receipt-print__sub {
+  font-size: 10pt;
+  color: #333333;
+}
+
+.receipt-print__number {
+  text-align: right;
+  font-size: 9.5pt;
+  line-height: 1.5;
+}
+
+.receipt-print__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+
+.receipt-print__table th,
+.receipt-print__table td {
+  border: 1px solid #000000;
+  padding: 6px 8px;
+  font-size: 10pt;
+  text-align: left;
+  vertical-align: top;
+}
+
+.receipt-print__table th {
+  width: 40%;
+  font-weight: 600;
+  background: #F2F2F2;
+}
+
+.receipt-print__sum {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border: 2px solid #000000;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.receipt-print__sum span {
+  font-size: 10pt;
+  letter-spacing: 0.08em;
+}
+
+.receipt-print__sum strong {
+  font-size: 16pt;
+  white-space: nowrap;
+}
+
+.receipt-print__body {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.receipt-print__qr {
+  flex: 0 0 auto;
+  width: 130px;
+  text-align: center;
+  border: 1px solid #000000;
+  padding: 8px;
+}
+
+.receipt-print__qr svg {
+  width: 114px;
+  height: 114px;
+  display: block;
+  margin: 0 auto;
+}
+
+.receipt-print__qr-hint,
+.receipt-print__qr-empty {
+  font-size: 8pt;
+  margin-top: 6px;
+  color: #333333;
+}
+
+.receipt-print__props {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.receipt-print__prop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px dotted #999999;
+  padding: 3px 0;
+  font-size: 9pt;
+}
+
+.receipt-print__prop span {
+  color: #333333;
+}
+
+.receipt-print__prop b {
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.receipt-print__sign {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 12px;
+  font-size: 9.5pt;
+}
+
+.receipt-print__foot {
+  font-size: 8pt;
+  color: #444444;
+  border-top: 1px solid #000000;
+  padding-top: 6px;
+  margin: 0;
+}
+
+/* -----------------------------------------------------------
+   3. Правила страницы и печати
+   ----------------------------------------------------------- */
+@page {
+  size: A4 portrait;
+  margin: 12mm 10mm;
+}
+
+@media print {
+  /* Всё приложение прячется; на бумагу уходит только документ */
+  body.printing-mode > *:not(.print-host) {
+    display: none !important;
+  }
+
+  body.printing-mode,
+  html {
+    background: #FFFFFF !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .print-host {
+    position: static;
+    inset: auto;
+    display: block;
+    background: none;
+    padding: 0;
+    overflow: visible;
+    box-shadow: none;
+    z-index: auto;
+  }
+
+  .print-host__bar,
+  .print-host__hint {
+    display: none !important;
+  }
+
+  .print-host__paper {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+  }
+
+  .receipt-print {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Нумерованные строки не разрываются посередине */
+  .receipt-print__table tr,
+  .receipt-print__sum,
+  .receipt-print__body,
+  .report-table tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .receipt-print__table th {
+    background: #F2F2F2 !important;
+  }
+
+  /* Экранная форма отчёта (дополнительный путь «печать → PDF») */
+  .report-print {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #000000;
+    font-size: 11pt;
+  }
+
+  .report-print h2 {
+    font-size: 12pt;
+    margin: 16px 0 6px;
+    border-bottom: 1px solid #000000;
+    padding-bottom: 3px;
+  }
+
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+  }
+
+  .report-table th,
+  .report-table td {
+    border: 1px solid #000000;
+    padding: 4px 6px;
+    font-size: 9pt;
+    text-align: left;
+  }
+
+  .report-table th {
+    background: #F2F2F2;
+    font-weight: 600;
+  }
+
+  .report-table td.num,
+  .report-table th.num {
+    text-align: right;
+    white-space: nowrap;
+  }
+}

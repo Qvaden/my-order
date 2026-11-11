@@ -1,0 +1,6 @@
+node_modules/
+cap_mjs/
+.dev-family/
+*.log
+.DS_Store
+Thumbs.db

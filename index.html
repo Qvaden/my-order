@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="description" content="МОЙ ПОРЯДОК — учёт платежей, счётчиков, документов и задач">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="app-manifest.webmanifest">
+  <title>Мой Порядок</title>
+
+  <!--
+    Этап 10: тема ставится ДО первой отрисовки. Без этого блока приложение
+    в тёмном клиенте VK показывало бы белую вспышку (CSS грузится раньше JS).
+    Источник темы — launch-параметр vk_color_scheme (его присылают все клиенты
+    VK). Вне ВКонтакте тема остаётся светлой: по критериям этапа браузерная
+    версия должна работать «как раньше». Модуль js/vk-integration.js позже
+    уточнит тему событиями VK Bridge.
+  -->
+  <script>
+    (function () {
+      var theme = null;
+      try {
+        var q = window.location.search;
+        // Ручной тест-переключатель (?theme=dark) имеет приоритет над клиентом
+        var manual = /[?&]theme=([^&]+)/.exec(q);
+        if (manual) {
+          theme = decodeURIComponent(manual[1]).toLowerCase() === 'dark' ? 'dark' : 'light';
+        } else {
+          var m = /[?&]vk_color_scheme=([^&]+)/.exec(q);
+          if (m) { theme = /dark/i.test(decodeURIComponent(m[1])) ? 'dark' : 'light'; }
+        }
+      } catch (e) { /* разбираем URL аккуратно — тема не критична */ }
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.style.colorScheme = 'dark';
+      }
+      try {
+        var a = localStorage.getItem('myorder_accent');
+        if (a && a !== 'blue') { document.documentElement.setAttribute('data-accent', a); }
+        var c = localStorage.getItem('myorder_contrast');
+        if (c === 'high') { document.documentElement.setAttribute('data-contrast', 'high'); }
+        var fs = localStorage.getItem('myorder_font_size');
+        if (fs) {
+          var px = fs === 'large' ? '18px' : (fs === 'xlarge' ? '20px' : '16px');
+          document.documentElement.style.setProperty('--base-font-size', px);
+          document.documentElement.setAttribute('data-font-size', fs);
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!--
+    Этап 10: VK Bridge SDK.
+    Локальная копия (js/vendor) используется как основной источник — она
+    переживает офлайн и не зависит от CDN. Если локальный файл не загрузился,
+    срабатывает подхват с unpkg. Вне ВКонтакте SDK просто не делает ничего
+    (window.vkBridge.isWebView() === false), приложение работает как сайт.
+  -->
+  <script src="js/vendor/vk-bridge.min.js"></script>
+  <script>
+    // Fallback: если локальной копии нет — тянем с CDN. Синхронно, до app.js.
+    if (typeof window.vkBridge === 'undefined') {
+      document.write('<script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"><\/script>');
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Контейнер контента разделов -->
+  <main id="app"></main>
+
+  <!-- Нижняя навигация -->
+  <nav class="nav-bottom" role="navigation" aria-label="Основная навигация">
+    <button class="nav-bottom__item nav-bottom__item--active" data-hash="#home" role="tab" aria-selected="true" aria-label="Главная">
+      <svg class="nav-bottom__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Главная</span>
+    </button>
+
+    <button class="nav-bottom__item" data-hash="#payments" role="tab" aria-selected="false" aria-label="Платежи">
+      <svg class="nav-bottom__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+        <line x1="1" y1="10" x2="23" y2="10"/>
+      </svg>
+      <span>Платежи</span>
+    </button>
+
+    <button class="nav-bottom__item" data-hash="#meters" role="tab" aria-selected="false" aria-label="Счётчики">
+      <svg class="nav-bottom__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <span>Счётчики</span>
+    </button>
+
+    <button class="nav-bottom__item" data-hash="#documents" role="tab" aria-selected="false" aria-label="Документы">
+      <svg class="nav-bottom__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      <span>Документы</span>
+    </button>
+
+    <button class="nav-bottom__item" data-hash="#tasks" role="tab" aria-selected="false" aria-label="Дела">
+      <svg class="nav-bottom__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <span>Дела</span>
+    </button>
+  </nav>
+
+  <script src="js/db.js"></script>
+  <script src="js/lazy-loader.js"></script>
+  <script src="js/vk-integration.js"></script>
+  <script src="js/cloud-sync.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/pdf-exporter.js"></script>
+  <script src="js/pro-manager.js"></script>
+  <script src="js/notifications-prefs.js"></script>
+  <script src="js/calendar-export.js"></script>
+  <script src="js/push-manager.js"></script>
+  <script src="js/quick-actions.js"></script>
+  <script src="js/family-ui.js"></script>
+  <script src="js/family.js"></script>
+  <script src="js/personalization.js"></script>
+  <script src="js/gost-qr.js"></script>
+  <script src="js/pro-analytics-plus.js"></script>
+  <script src="js/micro-fx.js"></script>
+  <script src="js/value-pack.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/payments.js"></script>
+  <script src="js/meters.js"></script>
+  <script src="js/documents.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/backup.js"></script>
+</body>
+</html>
