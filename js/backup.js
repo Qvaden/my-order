@@ -642,16 +642,31 @@
             : 'Закройте приложение четырьмя цифрами. Чужой телефон не покажет ваши платежи и документы.') +
         '</p>' +
         (set
-          ? '<div class="backup-pin__state">' +
-              '<span class="backup-pin__dots" aria-hidden="true">• • • •</span>' +
-              '<span class="backup-pin__label">PIN установлен</span>' +
+          ? '<div class="backup-pin__active-badge">' +
+              '<div class="backup-pin__active-icon">🔒</div>' +
+              '<div class="backup-pin__active-info">' +
+                '<span class="backup-pin__active-title">PIN-код установлен</span>' +
+                '<span class="backup-pin__active-sub">• • • • Приложение надёжно защищено</span>' +
+              '</div>' +
             '</div>' +
-            '<button type="button" class="btn btn--secondary" data-backup-action="pin-remove">Снять PIN</button>'
-          : '<div class="backup-pin__form">' +
-              '<input class="input" type="password" inputmode="numeric" pattern="[0-9]*"' +
+            '<button type="button" class="btn btn--secondary w-full" data-backup-action="pin-remove">Снять PIN</button>'
+          : '<div class="backup-pin__container">' +
+              '<div class="backup-pin__display" id="backup-pin-display" role="button" tabindex="0" aria-label="Ввести 4 цифры PIN">' +
+                '<div class="backup-pin__cell is-active" data-pin-idx="0"></div>' +
+                '<div class="backup-pin__cell" data-pin-idx="1"></div>' +
+                '<div class="backup-pin__cell" data-pin-idx="2"></div>' +
+                '<div class="backup-pin__cell" data-pin-idx="3"></div>' +
+              '</div>' +
+              '<input class="backup-pin__real-input" type="password" inputmode="numeric" pattern="[0-9]*"' +
                 ' maxlength="4" placeholder="0000" data-backup-input="pin"' +
                 ' aria-label="Новый PIN, 4 цифры" autocomplete="off">' +
-              '<button type="button" class="btn btn--primary" data-backup-action="pin-set">Установить PIN</button>' +
+              '<button type="button" class="btn btn--primary w-full" data-backup-action="pin-set">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;margin-right:6px;" aria-hidden="true">' +
+                  '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>' +
+                  '<path d="M7 11V7a5 5 0 0 1 10 0v4"/>' +
+                '</svg>' +
+                '<span>Установить PIN</span>' +
+              '</button>' +
             '</div>') +
         (window.Security && window.Security.recoveryHint()
           ? '<p class="backup-section__hint">Восстановление: VK ID ••••' +
@@ -1641,6 +1656,54 @@
         if (taps === 5) {
           taps = 0;
           handleOwnerPanelModal();
+        }
+      });
+    }
+
+    var pinDisplay = el.querySelector('#backup-pin-display');
+    var pinRealInput = el.querySelector('[data-backup-input="pin"]');
+    if (pinDisplay && pinRealInput) {
+      pinDisplay.addEventListener('click', function () {
+        pinRealInput.focus();
+      });
+      pinRealInput.addEventListener('focus', function () {
+        var cells = pinDisplay.querySelectorAll('.backup-pin__cell');
+        var val = String(pinRealInput.value || '').replace(/\D/g, '').slice(0, 4);
+        for (var i = 0; i < cells.length; i++) {
+          if (i === val.length) {
+            cells[i].classList.add('is-active');
+          }
+        }
+      });
+      pinRealInput.addEventListener('blur', function () {
+        var cells = pinDisplay.querySelectorAll('.backup-pin__cell');
+        for (var i = 0; i < cells.length; i++) {
+          cells[i].classList.remove('is-active');
+        }
+      });
+      pinRealInput.addEventListener('input', function () {
+        var val = String(pinRealInput.value || '').replace(/\D/g, '').slice(0, 4);
+        pinRealInput.value = val;
+        var cells = pinDisplay.querySelectorAll('.backup-pin__cell');
+        for (var i = 0; i < cells.length; i++) {
+          var cell = cells[i];
+          if (i < val.length) {
+            cell.className = 'backup-pin__cell is-filled';
+            cell.innerHTML = '<span class="backup-pin__cell-dot"></span>';
+          } else if (i === val.length) {
+            cell.className = 'backup-pin__cell is-active';
+            cell.innerHTML = '';
+          } else {
+            cell.className = 'backup-pin__cell';
+            cell.innerHTML = '';
+          }
+        }
+        if (val.length === 4) {
+          try {
+            if (window.VK && window.VK.taptic) {
+              window.VK.taptic('impact', 'medium');
+            }
+          } catch (e) {}
         }
       });
     }
