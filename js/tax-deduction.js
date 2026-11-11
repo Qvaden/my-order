@@ -126,8 +126,10 @@
       host.className = 'print-host';
       host.innerHTML =
         '<div class="print-host__bar">' +
-          '<button type="button" class="btn btn--primary" data-tax-action="print">Печать / Сохранить в PDF</button>' +
-          '<button type="button" class="btn btn--secondary" data-tax-action="close">Закрыть</button>' +
+          '<div class="print-host__actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+            '<button type="button" class="btn btn--primary" data-tax-action="print">Печать / Сохранить в PDF</button>' +
+            '<button type="button" class="btn btn--secondary" data-tax-action="close">Закрыть</button>' +
+          '</div>' +
           '<span class="print-host__hint">В диалоге печати выберите «Сохранить как PDF».</span>' +
         '</div>' +
         '<div class="print-host__paper" style="background:#FFFFFF !important;color:#0F172A !important;">' +

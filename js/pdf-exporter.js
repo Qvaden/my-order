@@ -1033,8 +1033,10 @@
     printHost.className = 'print-host';
     printHost.innerHTML =
       '<div class="print-host__bar">' +
-        '<button type="button" class="btn btn--primary" data-print-action="go">Печать / Сохранить PDF</button>' +
-        '<button type="button" class="btn btn--secondary" data-print-action="close">Закрыть</button>' +
+        '<div class="print-host__actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+          '<button type="button" class="btn btn--primary" data-print-action="go">Печать / Сохранить PDF</button>' +
+          '<button type="button" class="btn btn--secondary" data-print-action="close">Закрыть</button>' +
+        '</div>' +
         '<span class="print-host__hint">В диалоге печати выберите «Сохранить как PDF», ' +
           'чтобы получить файл без установки принтера.</span>' +
       '</div>' +
